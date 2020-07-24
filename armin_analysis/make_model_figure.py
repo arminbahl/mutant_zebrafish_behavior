@@ -8,10 +8,9 @@ import pandas as pd
 import pylab as pl
 from fit_integrator_model import leaky_integrator_model2
 
-experiment = "surrogate_fish2"
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
 
-for experiment in ["surrogate_fish2"]:
+for experiment in ["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
 
     estimated_parameters = dict({"repeat": [],
                                  "genotype": [],
@@ -22,6 +21,12 @@ for experiment in ["surrogate_fish2"]:
                                  "bout_clock_probability_above_threshold": [],
                                  })
 
+
+    errors_over_generations = dict({"repeat": [],
+                                  "genotype": [],
+                                  "generation": [],
+                                  "error_i": [],
+                                  "error": []})
     for repeat in range(12):
 
         all_data_experiment = dict({"fish_ID": [],
@@ -42,30 +47,27 @@ for experiment in ["surrogate_fish2"]:
             F = np.load(root_path / experiment / f"leaky_integrator_model2_F_{genotype}_{repeat}.npy")
 
             # Create a single error function from the 5 error functions
-
-
             # Normalize the features based on their genera unit range
-            for feature in range(5):
-                norm_factor = np.percentile(F[0, :, feature], 25)
+            for error_i in range(5):
+                norm_factor = np.percentile(F[0, :, error_i], 25)
 
-                for gen in range(F.shape[0]):
-                    F[gen, :, feature] = F[gen, :, feature] / norm_factor # np.percentile(F[gen, :, feature], 75)
+                for generation in range(F.shape[0]):
+                    F[generation, :, error_i] = F[generation, :, error_i] / norm_factor # np.percentile(F[gen, :, feature], 75)
 
             F_sum = (F[:, :, 0] + F[:, :, 1] + F[:, :, 2] + F[:, :, 3] + F[:, :, 4]) / 5
 
-            # gens = np.arange(0, F.shape[0]) + 1
-            # pl.figure()
-            # sc = pl.plot(gens, F[:, :, 0].min(axis=1), linestyle='--', marker='.', c='C0')
-            # sc = pl.plot(gens, F[:, :, 1].min(axis=1), linestyle='--', marker='.', c='C1')
-            # sc = pl.plot(gens, F[:, :, 2].min(axis=1), linestyle='--', marker='.', c='C2')
-            # sc = pl.plot(gens, F[:, :, 3].min(axis=1), linestyle='--', marker='.', c='C3')
-            # sc = pl.plot(gens, F[:, :, 4].min(axis=1), linestyle='--', marker='.', c='C4')
-            # sc = pl.plot(gens, F_sum[:, :].min(axis=1), linestyle='--', marker='.', c='C5')
-            #
-            # pl.yscale("log")
-            # pl.xlabel("Generation")
-            # pl.ylabel("Log Error")
-            # pl.show()
+            for generation in range(F.shape[0]):
+                    for error_i in range(6):
+                        errors_over_generations["repeat"].append(repeat)
+                        errors_over_generations["genotype"].append(genotype)
+                        errors_over_generations["generation"].append(generation)
+                        errors_over_generations["error_i"].append(error_i)
+                        if error_i < 5:
+                            errors_over_generations["error"].append(F[generation, :, error_i].min())
+                        else:
+                            errors_over_generations["error"].append(F_sum[generation, :].min())
+
+
 
             # Get the best parameter
             best_i = np.argmin(F_sum[-1, :])
@@ -78,7 +80,7 @@ for experiment in ["surrogate_fish2"]:
             estimated_parameters["T"].append(T)
             estimated_parameters["bout_clock_probability_below_threshold"].append(bout_clock_probability_below_threshold)
             estimated_parameters["bout_clock_probability_above_threshold"].append(bout_clock_probability_above_threshold)
-
+            continue
             # Run the simulation with these parameters
             print(tau, noise_sigma, T, bout_clock_probability_below_threshold, bout_clock_probability_above_threshold)
 
@@ -105,6 +107,8 @@ for experiment in ["surrogate_fish2"]:
             all_data_experiment["inter_bout_interval"].extend(all_data[:bout_counter - 1, 7])
             all_data_experiment["heading_angle_change"].extend(all_data[:bout_counter - 1, 8])
             all_data_experiment["same_as_previous"].extend(all_data[:bout_counter - 1, 9])
+
+        continue
 
         df = pd.DataFrame.from_dict(all_data_experiment).astype(dtype={"trial": "int64",
                                                                        "stim": "int64",
@@ -142,10 +146,19 @@ for experiment in ["surrogate_fish2"]:
 
     # Save the parameter info file
     df = pd.DataFrame.from_dict(estimated_parameters).astype(dtype={"repeat": "int64"}, copy=False)
-
-    print(df)
-
     df.set_index(["genotype", 'repeat'], inplace=True)
     df.sort_index(inplace=True)
 
-    df.to_excel(root_path / experiment / "estimated_model_parameters.xlsx", sheet_name="sheet1")
+    df.to_excel(root_path / experiment / "estimated_model_parameters.xlsx", sheet_name="data")
+    df.to_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data")
+
+
+
+    df = pd.DataFrame.from_dict(errors_over_generations).astype(dtype={"repeat": "int64",
+                                                                       "generation":"int64",
+                                                                       "error_i":"int64"}, copy=False)
+    df.set_index(["genotype", 'repeat', "error_i", "generation"], inplace=True)
+    df.sort_index(inplace=True)
+
+    df.to_excel(root_path / experiment / "errors_over_generations.xlsx", sheet_name="data")
+    df.to_hdf(root_path / experiment / "errors_over_generations.h5", key="data")

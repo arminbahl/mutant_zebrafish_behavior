@@ -147,13 +147,13 @@ def leaky_integrator_model2(dt, ts, xs, all_data, tau, noise_sigma, T, bout_cloc
     return bout_counter
 
 
-def get_target_result(root_path, genotype):
-    df_extracted_features = pd.read_hdf(root_path / "all_data.h5", key="extracted_features")
-    df_extracted_binned_features = pd.read_hdf(root_path / "all_data.h5", key="extracted_binned_features")
-    df_extracted_binned_features_same_direction = pd.read_hdf(root_path / "all_data.h5", key="extracted_binned_features_same_direction")
-    df_extracted_binned_features_heading_angle_change_histograms = pd.read_hdf(root_path / "all_data.h5", key="extracted_binned_features_heading_angle_change_histograms")
-    df_extracted_binned_features_inter_bout_interval_histograms = pd.read_hdf(root_path / "all_data.h5", key="extracted_binned_features_inter_bout_interval_histograms")
-    df_gmm_fitting_results = pd.read_hdf(root_path / "all_data.h5", key="gmm_fitting_results")
+def get_target_result(path, genotype):
+    df_extracted_features = pd.read_hdf(path, key="extracted_features")
+    df_extracted_binned_features = pd.read_hdf(path, key="extracted_binned_features")
+    df_extracted_binned_features_same_direction = pd.read_hdf(path, key="extracted_binned_features_same_direction")
+    df_extracted_binned_features_heading_angle_change_histograms = pd.read_hdf(path, key="extracted_binned_features_heading_angle_change_histograms")
+    df_extracted_binned_features_inter_bout_interval_histograms = pd.read_hdf(path, key="extracted_binned_features_inter_bout_interval_histograms")
+    df_gmm_fitting_results = pd.read_hdf(path, key="gmm_fitting_results")
 
     return df_extracted_features.query("genotype == @genotype").groupby("stim").mean()["correctness"], \
            df_extracted_features.query("genotype == @genotype").groupby("stim").mean()["inter_bout_interval"], \
