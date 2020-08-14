@@ -10,7 +10,7 @@ from fit_integrator_model import leaky_integrator_model2
 
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
 
-for experiment in ["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
+for experiment in ["disc1_hetinx"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
 
     estimated_parameters = dict({"repeat": [],
                                  "genotype": [],
@@ -54,7 +54,7 @@ for experiment in ["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
                 for generation in range(F.shape[0]):
                     F[generation, :, error_i] = F[generation, :, error_i] / norm_factor # np.percentile(F[gen, :, feature], 75)
 
-            F_sum = (F[:, :, 0] + F[:, :, 1] + F[:, :, 2] + F[:, :, 3] + F[:, :, 4]) / 5
+            F_sum = (F[:, :, 0] + F[:, :, 1] + 5*F[:, :, 2] + F[:, :, 3] + F[:, :, 4]) / 5
 
             for generation in range(F.shape[0]):
                     for error_i in range(6):
@@ -80,7 +80,7 @@ for experiment in ["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
             estimated_parameters["T"].append(T)
             estimated_parameters["bout_clock_probability_below_threshold"].append(bout_clock_probability_below_threshold)
             estimated_parameters["bout_clock_probability_above_threshold"].append(bout_clock_probability_above_threshold)
-            continue
+
             # Run the simulation with these parameters
             print(tau, noise_sigma, T, bout_clock_probability_below_threshold, bout_clock_probability_above_threshold)
 
@@ -108,7 +108,6 @@ for experiment in ["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
             all_data_experiment["heading_angle_change"].extend(all_data[:bout_counter - 1, 8])
             all_data_experiment["same_as_previous"].extend(all_data[:bout_counter - 1, 9])
 
-        continue
 
         df = pd.DataFrame.from_dict(all_data_experiment).astype(dtype={"trial": "int64",
                                                                        "stim": "int64",
@@ -152,6 +151,80 @@ for experiment in ["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
     df.to_excel(root_path / experiment / "estimated_model_parameters.xlsx", sheet_name="data")
     df.to_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data")
 
+    #######
+    # Also run the consensus model simulation
+    all_data_experiment = dict({"fish_ID": [],
+                                "genotype": [],
+                                "trial": [],
+                                "stim": [],
+                                "bout_time": [],
+                                "bout_x": [],
+                                "bout_y": [],
+                                "inter_bout_interval": [],
+                                "heading_angle_change": [],
+                                "same_as_previous": []})
+
+    for genotype in ["wt", "het", "hom"]:
+        df_estimated_parameters = df.query("genotype == @genotype").droplevel(["genotype"])
+
+        # Initialize the buffers
+        dt = 0.01
+        ts = np.arange(0, 30, dt)
+        xs = np.empty_like(ts)
+        all_data = np.empty((10000000, 10))  # Max allow 10 million bouts per simulation run
+
+        tau = np.median(df_estimated_parameters['tau'].values)
+        noise_sigma = np.median(df_estimated_parameters['noise_sigma'])
+        T = np.median(df_estimated_parameters['T'])
+        bout_clock_probability_below_threshold = np.median(df_estimated_parameters['bout_clock_probability_below_threshold'])
+        bout_clock_probability_above_threshold = np.median(df_estimated_parameters['bout_clock_probability_above_threshold'])
+
+        bout_counter = leaky_integrator_model2(dt, ts, xs, all_data,
+                                               tau,
+                                               noise_sigma,
+                                               T,
+                                               bout_clock_probability_below_threshold,
+                                               bout_clock_probability_above_threshold)
+
+        all_data_experiment["fish_ID"].extend([f"fish_{genotype}_{int(fish_ID)}" for fish_ID in all_data[:bout_counter - 1, 0]])
+        all_data_experiment["genotype"].extend([genotype] * (bout_counter - 1))
+        all_data_experiment["trial"].extend(all_data[:bout_counter - 1, 2])
+        all_data_experiment["stim"].extend(all_data[:bout_counter - 1, 3])
+        all_data_experiment["bout_time"].extend(all_data[:bout_counter - 1, 4])
+        all_data_experiment["bout_x"].extend(all_data[:bout_counter - 1, 5])
+        all_data_experiment["bout_y"].extend(all_data[:bout_counter - 1, 6])
+        all_data_experiment["inter_bout_interval"].extend(all_data[:bout_counter - 1, 7])
+        all_data_experiment["heading_angle_change"].extend(all_data[:bout_counter - 1, 8])
+        all_data_experiment["same_as_previous"].extend(all_data[:bout_counter - 1, 9])
+
+    df = pd.DataFrame.from_dict(all_data_experiment).astype(dtype={"trial": "int64",
+                                                                   "stim": "int64",
+                                                                   "same_as_previous": "bool"}, copy=False)
+
+    print(df)
+
+    df.set_index(['fish_ID', "genotype", 'trial', 'stim'], inplace=True)
+    df.sort_index(inplace=True)
+
+    (root_path / experiment).mkdir(exist_ok=True)
+
+    df.to_hdf(root_path / experiment / f"all_data_best_model_consensus.h5", key="all_bouts", complevel=4)
+
+
+    # Extract more detailed behavioral features
+    df_extracted_features, df_extracted_binned_features, \
+    df_extracted_binned_features_same_direction, \
+    df_extracted_binned_features_heading_angle_change_histograms, \
+    df_extracted_binned_features_inter_bout_interval_histograms, \
+    df_gmm_fitting_results = get_fish_info(df)
+
+    df_extracted_features.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="extracted_features", complevel=9)
+    df_extracted_binned_features.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="extracted_binned_features", complevel=9)
+    df_extracted_binned_features_same_direction.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="extracted_binned_features_same_direction", complevel=9)
+    df_extracted_binned_features_heading_angle_change_histograms.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="extracted_binned_features_heading_angle_change_histograms", complevel=9)
+    df_extracted_binned_features_inter_bout_interval_histograms.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="extracted_binned_features_inter_bout_interval_histograms", complevel=9)
+    df_gmm_fitting_results.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="gmm_fitting_results", complevel=9)
+
 
 
     df = pd.DataFrame.from_dict(errors_over_generations).astype(dtype={"repeat": "int64",
@@ -162,3 +235,5 @@ for experiment in ["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
 
     df.to_excel(root_path / experiment / "errors_over_generations.xlsx", sheet_name="data")
     df.to_hdf(root_path / experiment / "errors_over_generations.h5", key="data")
+
+

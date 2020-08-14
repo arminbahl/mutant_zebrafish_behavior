@@ -5,7 +5,7 @@ import my_figure as myfig
 import matplotlib
 import pandas as pd
 
-fig = myfig.Figure(title=f"Figure2")
+fig = myfig.Figure(title=f"Figure 2")
 
 coherence_colors = ["#000000", "#330000",  "#990000", "#CC3333"]
 
