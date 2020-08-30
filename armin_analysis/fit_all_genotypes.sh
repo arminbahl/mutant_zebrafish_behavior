@@ -8,3 +8,5 @@ sh fit_all_genotypes_exp5.sh
 sh fit_all_genotypes_exp6.sh
 sh fit_all_genotypes_exp7.sh
 sh fit_all_genotypes_exp8.sh
+sh fit_all_genotypes_exp9.sh
+sh fit_all_genotypes_exp10.sh
