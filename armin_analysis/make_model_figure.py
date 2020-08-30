@@ -113,7 +113,6 @@ for experiment in ["disc1_hetinx"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "su
                                                                        "stim": "int64",
                                                                        "same_as_previous": "bool"}, copy=False)
 
-        print(df)
 
         df.set_index(['fish_ID', "genotype", 'trial', 'stim'], inplace=True)
         df.sort_index(inplace=True)

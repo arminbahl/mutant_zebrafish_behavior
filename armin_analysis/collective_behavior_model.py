@@ -9,6 +9,7 @@ from tqdm import tqdm
 from PIL import Image
 from matplotlib.colors import to_rgb
 import pandas as pd
+from scipy.interpolate import interp1d
 
 
 @jit(nopython=True)
@@ -215,13 +216,22 @@ print("Chance polarization", chance_polarization)
 
 # Load the consensus parameter sets
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
+
 for experiment in ["scn1lab_sa16474", "scn1lab_NIBR", "disc1_hetinx"]:
-    for genotype in ["wt", "het"]:
+
+    if experiment == "scn1lab_sa16474" or experiment == "scn1lab_NIBR":
+        genotypes = ["wt", "het"]
+
+    if experiment == 'disc1_hetinx':
+        genotypes = ["wt", "hom"]
+
+    for genotype in genotypes:
 
         df_estimated_parameters_model = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @genotype").droplevel(["genotype"])
 
         polarizations_repeats = []
         ds_over_time_repeats = []
+        speed_over_time_repeats = []
 
         for j in range(12):
 
@@ -233,6 +243,7 @@ for experiment in ["scn1lab_sa16474", "scn1lab_NIBR", "disc1_hetinx"]:
 
             polarizations = []
             ds_over_time = []
+            speed_over_time = []
 
             for k in range(50):
                 print(j,k)
@@ -247,13 +258,21 @@ for experiment in ["scn1lab_sa16474", "scn1lab_NIBR", "disc1_hetinx"]:
                 turning_speed_particles = np.zeros((int(100/dt), n))
 
                 effect_strength_motion = 7
-                if genotype == "wt":
+
+                if experiment == "scn1lab_sa16474" and genotype == "wt":
                     effect_strength_clutter = -3
-                if genotype == "het":
-                    if experiment == "scn1lab_sa16474" or experiment == "scn1lab_NIBR":
-                        effect_strength_clutter = -5
-                    if experiment == "disc1_hetinx":
-                        effect_strength_clutter = -2
+                if experiment == "scn1lab_sa16474" and genotype == "het":
+                    effect_strength_clutter = -5
+
+                if experiment == "scn1lab_NIBR" and genotype == "wt":
+                    effect_strength_clutter = -3
+                if experiment == "scn1lab_NIBR" and genotype == "het":
+                    effect_strength_clutter = -5
+
+                if experiment == "disc1_hetinx" and genotype == "wt":
+                    effect_strength_clutter = -3
+                if experiment == "disc1_hetinx" and genotype == "hom":
+                    effect_strength_clutter = -2
 
                 simulate_particles(tau, sigma, T, p_below, p_above,
                                    effect_strength_motion,
@@ -328,10 +347,25 @@ for experiment in ["scn1lab_sa16474", "scn1lab_NIBR", "disc1_hetinx"]:
 
                 ds_over_time.append(np.mean(ds, axis=0))
 
+                # Calculate the speed over time
+                # filter the x, y
+                new_time = np.arange(0, 100, 1)
+                f = interp1d(ts, x_particles, axis=0, bounds_error=False)
+                x_particles_filtered = f(new_time)
+
+                f = interp1d(ts, y_particles, axis=0, bounds_error=False)
+                y_particles_filtered = f(new_time)
+
+                speed = np.sqrt(np.diff(x_particles_filtered, axis=0)**2 + np.diff(y_particles_filtered, axis=0)**2)
+
+                speed_over_time.append(np.mean(speed, axis=1))
+
             polarizations_repeats.append(np.mean(polarizations, axis=0))
             ds_over_time_repeats.append(np.mean(ds_over_time, axis=0))
+            speed_over_time_repeats.append(np.mean(speed_over_time, axis=0))
 
         np.save(root_path / experiment / f"polarizations_{genotype}.npy", polarizations_repeats)
         np.save(root_path / experiment / f"neighbor_distances_{genotype}.npy", ds_over_time_repeats)
+        np.save(root_path / experiment / f"speed_over_time_{genotype}.npy", speed_over_time_repeats)
 
 

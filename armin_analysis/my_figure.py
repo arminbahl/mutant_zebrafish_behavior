@@ -353,7 +353,8 @@ class Plot():
                 self.ax.axhspan(hspan[0], hspan[1], lw = 0, edgecolor='none', facecolor=hspan[2],zorder=0, alpha=hspan[3])
 
         if title is not None:
-            self.ax.set_title(title, color=self.fig.textcolor)
+            self.ax.set_title(title, color=self.fig.textcolor, fontsize=self.fig.fontsize_plots)
+
         if num is not None:
             if self.ax.spines['left'].get_visible():
                 pl.figtext((self.xpos-1.8*self.fig.fontsize_plots /9.)/self.fig.fig_width, (self.ypos+self.plot_height+0.5)/self.fig.fig_height, num, weight='bold', fontsize=self.fig.fontsize_labels, ha = 'center', va='center', color=self.fig.textcolor)
