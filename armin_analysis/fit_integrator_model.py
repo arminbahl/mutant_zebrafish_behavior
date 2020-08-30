@@ -147,13 +147,13 @@ def leaky_integrator_model2(dt, ts, xs, all_data, tau, noise_sigma, T, bout_cloc
     return bout_counter
 
 
-def get_target_result(path, genotype):
-    df_extracted_features = pd.read_hdf(path, key="extracted_features")
-    df_extracted_binned_features = pd.read_hdf(path, key="extracted_binned_features")
-    df_extracted_binned_features_same_direction = pd.read_hdf(path, key="extracted_binned_features_same_direction")
-    df_extracted_binned_features_heading_angle_change_histograms = pd.read_hdf(path, key="extracted_binned_features_heading_angle_change_histograms")
-    df_extracted_binned_features_inter_bout_interval_histograms = pd.read_hdf(path, key="extracted_binned_features_inter_bout_interval_histograms")
-    df_gmm_fitting_results = pd.read_hdf(path, key="gmm_fitting_results")
+def get_target_result(hdf5_path, genotype):
+    df_extracted_features = pd.read_hdf(hdf5_path, key="extracted_features")
+    df_extracted_binned_features = pd.read_hdf(hdf5_path, key="extracted_binned_features")
+    df_extracted_binned_features_same_direction = pd.read_hdf(hdf5_path, key="extracted_binned_features_same_direction")
+    df_extracted_binned_features_heading_angle_change_histograms = pd.read_hdf(hdf5_path, key="extracted_binned_features_heading_angle_change_histograms")
+    df_extracted_binned_features_inter_bout_interval_histograms = pd.read_hdf(hdf5_path, key="extracted_binned_features_inter_bout_interval_histograms")
+    df_gmm_fitting_results = pd.read_hdf(hdf5_path, key="gmm_fitting_results")
 
     return df_extracted_features.query("genotype == @genotype").groupby("stim").mean()["correctness"], \
            df_extracted_features.query("genotype == @genotype").groupby("stim").mean()["inter_bout_interval"], \
@@ -231,7 +231,7 @@ class MyProblem(Problem):
         self.target_df_binned_same_direction, \
         self.target_df_binned_features_heading_angle_change_histograms, \
         self.target_df_binned_features_inter_bout_interval_histograms, \
-        self.target_df_gmm_fitting_results = get_target_result(root_path, target_genotype)
+        self.target_df_gmm_fitting_results = get_target_result(root_path / "all_data.h5", target_genotype)
 
     #def compute_error(self, vals, target):
     #    return np.mean(((vals - target) / target)**2)
