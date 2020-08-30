@@ -8,6 +8,8 @@ import cv2
 from tqdm import tqdm
 from PIL import Image
 from matplotlib.colors import to_rgb
+import pandas as pd
+
 
 @jit(nopython=True)
 def determine_angle_between_fish(ang1, x1, y1, x2, y2):
@@ -21,15 +23,15 @@ def determine_angle_between_fish(ang1, x1, y1, x2, y2):
     angle_between_fish = (ang1 - ang2)
 
     return angle_between_fish
-    #if angle_between_fish <= 180:
-    #    return
-    #print(angle_between_fish)
 
-
-#determine_angle_between_fish(90, 0, 0, -0.1, -10)
-#sdfsf
 @jit(nopython=True)
-def simulate_particles(genotype,
+def simulate_particles(tau,
+                       sigma,
+                       T,
+                       p_below,
+                       p_above,
+                       effect_strength_motion,
+                       effect_strength_clutter,
                        dt,
                        ts,
                        integrated_motion_perception_particles,
@@ -42,78 +44,10 @@ def simulate_particles(genotype,
 
     tau_forward_speed = 0.1  # s
     tau_turning_speed = 0.1  # s
-    effect_strength_motion = 2
-    effect_strength_clutter = 10 # negative is repulsive
     fish_size = 10  # 10 pixel (one body length); arena is 512 pixel
     fish_forward_speed = 10
 
     n_particles = integrated_motion_perception_particles.shape[1]
-
-    # wt scn1lab_sa16474
-    if genotype == 0:
-        #tau_perception = 0.4  # s
-        #perception_noise_sigma = 5.9
-        #T = 0.4
-        #p_below = 0.009098
-        #p_above = 0.027
-
-        tau = 0.529309
-        sigma = 8.738211
-        T = 0.778464
-        p_below = 0.008042
-        p_above = 0.03623
-
-    # het scn1lab_sa16474
-    if genotype == 1:
-        #tau_perception = 1.4
-
-        #perception_noise_sigma = 4
-        #T = 0.203593
-        #p_below = 0.001663
-        #p_above = 0.019993
-
-        tau=0.880916
-        sigma=5.757828
-        T=0.370462
-        p_below=0.006409
-        p_above=0.016526
-
-    # wt scn1lab_NIBR
-    if genotype == 2:
-        tau=1.364913
-        sigma=12.160690
-        T=0.507576
-        p_below=0.006358
-        p_above=0.014497
-
-    if genotype == 3:
-        tau=1.634761
-        sigma=6.743575
-        T=0.236815
-        p_below=0.004419
-        p_above=0.008745
-
-    # Disc WT
-    if genotype == 4:
-        tau=0.529309
-        sigma=8.738211
-        T=0.778464
-        p_below=0.008042
-        p_above=0.036234
-
-    if genotype == 5:
-        tau=0.529309
-        sigma=8.738211
-        T=0.778464
-        p_below=0.008042
-        p_above=0.036234
-
-    if genotype == 6:
-        tau=0.880916
-        sigma=5.757828
-        T=0.370462
-        p_below=0.006409
-        p_above=0.016526
 
     for time_i in range(1, ts.shape[0]):
         ts[time_i] = ts[time_i - 1] + dt
@@ -142,8 +76,6 @@ def simulate_particles(genotype,
                     else:
                         angle_between_orientation_vectors = ang1 - ang2
 
-                    #print(angle_between_orientation_vectors)
-                    #return
                     # is it on the right or the left side?
                     angle_between_fish = determine_angle_between_fish(ang1,
                                                     x_particles[time_i - 1, particle_i],
@@ -151,19 +83,17 @@ def simulate_particles(genotype,
                                                     x_particles[time_i - 1, particle_j],
                                                     y_particles[time_i - 1, particle_j])
 
-
                     perpendicular_motion_drive = effect_strength_motion * \
                                                  forward_speed_particles[time_i - 1, particle_j] * \
                                                  np.sin(np.radians(angle_between_orientation_vectors)) / distance
 
-                    # generally, fish are repulsive based on angle the other fish casts on the retina!
-
+                    # Generally, fish are repulsive based on angle the other fish casts on the retina!
                     size_on_retina = 2*np.arctan(fish_size/(2*distance))
 
                     if 0 <= angle_between_fish < 180:
-                        current_clutter_perception_particle_i += effect_strength_clutter*size_on_retina
+                        current_clutter_perception_particle_i += effect_strength_clutter * size_on_retina
                     if 180 <= angle_between_fish < 360:
-                        current_clutter_perception_particle_i -= effect_strength_clutter*size_on_retina
+                        current_clutter_perception_particle_i -= effect_strength_clutter * size_on_retina
 
                     # outward motion
                     if 0 <= angle_between_fish < 180 and perpendicular_motion_drive > 0:
@@ -229,25 +159,25 @@ def simulate_particles(genotype,
                                               forward_speed_particles[time_i, particle_i] * dt * np.sin(np.radians(orientation_particles[time_i, particle_i]))
 
             recompute_orientation = False
-            x_particles[time_i, particle_i] = x_particles[time_i, particle_i] % 512
-            y_particles[time_i, particle_i] = y_particles[time_i, particle_i] % 512
+            #x_particles[time_i, particle_i] = x_particles[time_i, particle_i] % 512
+            #y_particles[time_i, particle_i] = y_particles[time_i, particle_i] % 512
 
-            #
-            # if x_particles[time_i, particle_i] >= 512:
-            #     x_particles[time_i, particle_i] = 511 - (x_particles[time_i, particle_i] - 512)
-            #     recompute_orientation = True
-            #
-            # if y_particles[time_i, particle_i] >= 512:
-            #     y_particles[time_i, particle_i] = 511 - (y_particles[time_i, particle_i] - 512)
-            #     recompute_orientation = True
-            #
-            # if x_particles[time_i, particle_i] < 0:
-            #     x_particles[time_i, particle_i] = 0 - (x_particles[time_i, particle_i] - 0)
-            #     recompute_orientation = True
-            #
-            # if y_particles[time_i, particle_i] < 0:
-            #     y_particles[time_i, particle_i] = 0 - (y_particles[time_i, particle_i] - 0)
-            #     recompute_orientation = True
+            #bounce of the wall
+            if x_particles[time_i, particle_i] >= 512:
+                x_particles[time_i, particle_i] = 511 - (x_particles[time_i, particle_i] - 512)
+                recompute_orientation = True
+
+            if y_particles[time_i, particle_i] >= 512:
+                y_particles[time_i, particle_i] = 511 - (y_particles[time_i, particle_i] - 512)
+                recompute_orientation = True
+
+            if x_particles[time_i, particle_i] < 0:
+                x_particles[time_i, particle_i] = 0 - (x_particles[time_i, particle_i] - 0)
+                recompute_orientation = True
+
+            if y_particles[time_i, particle_i] < 0:
+                y_particles[time_i, particle_i] = 0 - (y_particles[time_i, particle_i] - 0)
+                recompute_orientation = True
 
             if recompute_orientation == True:
                 orientation_particles[time_i, particle_i] = np.degrees(np.arctan2(y_particles[time_i, particle_i] - y_particles[time_i - 1, particle_i],
@@ -256,7 +186,7 @@ def simulate_particles(genotype,
             orientation_particles[time_i, particle_i] = orientation_particles[time_i, particle_i] % 360
 
 dt = 0.01
-n = 10
+n = 8
 
 # Compute the chance levels
 x_particles = np.random.random(size=(int(100/dt), n))*512
@@ -265,8 +195,8 @@ orientation_particles = np.random.random(size=(int(100/dt), n))*360
 
 # calculate chance distance
 ds = []
-for k in range(10):
-    for l in range(10):
+for k in range(n):
+    for l in range(n):
         if k == l:
             continue
 
@@ -275,206 +205,133 @@ for k in range(10):
 
 chance_distance = np.mean(ds)
 
+print("chance_distance", chance_distance)
 # Calculate polarizion chance
 x = np.cos(np.radians(orientation_particles)).mean(axis=1)
 y = np.sin(np.radians(orientation_particles)).mean(axis=1)
 
 chance_polarization = np.sqrt(x**2 + y**2).mean()
+print("Chance polarization", chance_polarization)
 
-for genotype in [0]:
-    polarizations = []
-    ds_over_time = []
-    for j in range(200):
-        print(j)
+# Load the consensus parameter sets
+root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
+for experiment in ["scn1lab_sa16474", "scn1lab_NIBR", "disc1_hetinx"]:
+    for genotype in ["wt", "het"]:
 
-        ts = np.zeros(int(100/dt))
-        integrated_motion_perception_particles = np.zeros((int(100/dt), n))
-        current_clutter_perception_particles = np.zeros((int(100/dt), n))
+        df_estimated_parameters_model = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @genotype").droplevel(["genotype"])
 
-        x_particles = np.random.random(size=(int(100/dt), n)) * 512
-        y_particles = np.random.random(size=(int(100/dt), n)) * 512
-        orientation_particles = np.random.random(size=(int(100/dt), n)) * 360
-        forward_speed_particles = np.zeros((int(100/dt), n))
-        turning_speed_particles = np.zeros((int(100/dt), n))
+        polarizations_repeats = []
+        ds_over_time_repeats = []
 
-        simulate_particles(genotype,
-                           dt,
-                           ts,
-                           integrated_motion_perception_particles,
-                           current_clutter_perception_particles,
-                           x_particles,
-                           y_particles,
-                           orientation_particles,
-                           turning_speed_particles,
-                           forward_speed_particles)
+        for j in range(12):
 
-        if j == 0:
-            root_path = Path("/Users/arminbahl/Desktop")
-            writer = imageio.get_writer(root_path / f'collective_model_genotype{genotype}.mp4', codec='libx264', fps=30,
-                                        ffmpeg_params=["-b:v", "8M"])
+            tau = df_estimated_parameters_model['tau'][j]
+            sigma = df_estimated_parameters_model['noise_sigma'][j]
+            T = df_estimated_parameters_model['T'][j]
+            p_below = df_estimated_parameters_model['bout_clock_probability_below_threshold'][j]
+            p_above = df_estimated_parameters_model['bout_clock_probability_above_threshold'][j]
 
-            node_colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"]
+            polarizations = []
+            ds_over_time = []
 
-            for time_i in tqdm(np.arange(0, ts.shape[0] - 1, 20)):
+            for k in range(50):
+                print(j,k)
+                ts = np.zeros(int(100/dt))
+                integrated_motion_perception_particles = np.zeros((int(100/dt), n))
+                current_clutter_perception_particles = np.zeros((int(100/dt), n))
 
-                img = np.zeros((512, 512), dtype=np.uint8)
-                img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+                x_particles = np.random.random(size=(int(100/dt), n)) * 512
+                y_particles = np.random.random(size=(int(100/dt), n)) * 512
+                orientation_particles = np.random.random(size=(int(100/dt), n)) * 360
+                forward_speed_particles = np.zeros((int(100/dt), n))
+                turning_speed_particles = np.zeros((int(100/dt), n))
 
-                for j in range(x_particles.shape[1]):
+                effect_strength_motion = 7
+                if genotype == "wt":
+                    effect_strength_clutter = -3
+                if genotype == "het":
+                    if experiment == "scn1lab_sa16474" or experiment == "scn1lab_NIBR":
+                        effect_strength_clutter = -5
+                    if experiment == "disc1_hetinx":
+                        effect_strength_clutter = -2
 
-                    cv2.putText(img, f"{ts[time_i]:.1f} s", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
-                                color=(255, 255, 255))
-                    if 20 < ts[time_i] < 80:
-                        cv2.putText(img, f"Fish-motion perception ON", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
+                simulate_particles(tau, sigma, T, p_below, p_above,
+                                   effect_strength_motion,
+                                   effect_strength_clutter,
+                                   dt,
+                                   ts,
+                                   integrated_motion_perception_particles,
+                                   current_clutter_perception_particles,
+                                   x_particles,
+                                   y_particles,
+                                   orientation_particles,
+                                   turning_speed_particles,
+                                   forward_speed_particles)
+
+                if j == 0 and k == 0:
+                    writer = imageio.get_writer(root_path / experiment / f'collective_model_{genotype}.mp4', codec='libx264', fps=30,
+                                                ffmpeg_params=["-b:v", "8M"])
+
+                    node_colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"]
+
+                    for time_i in tqdm(np.arange(0, ts.shape[0] - 1, 20)):
+
+                        img = np.zeros((512, 512), dtype=np.uint8)
+                        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+                        cv2.putText(img, f"{ts[time_i]:.1f} s", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
                                     color=(255, 255, 255))
+                        if 20 < ts[time_i] < 80:
+                            cv2.putText(img, f"Fish-motion perception ON", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
+                                        color=(255, 255, 255))
 
-                    if 100 < ts[time_i] < 160:
-                        cv2.putText(img, f"Ground moving right", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
-                                    color=(255, 255, 255))
+                        # if 100 < ts[time_i] < 160:
+                        #     cv2.putText(img, f"Ground moving right", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
+                        #                 color=(255, 255, 255))
+                        #
+                        # if 180 < ts[time_i] < 240:
+                        #     cv2.putText(img, f"Ground moving left", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
+                        #                 color=(255, 255, 255))
 
-                    if 180 < ts[time_i] < 240:
-                        cv2.putText(img, f"Ground moving left", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
-                                    color=(255, 255, 255))
+                        for j in range(x_particles.shape[1]):
 
-                    dx = 10 * np.cos(np.radians(orientation_particles[time_i, j]))
-                    dy = 10 * np.sin(np.radians(orientation_particles[time_i, j]))
-                    scale = 1
-                    cv2.line(img, (int(x_particles[time_i, j] * scale), int(y_particles[time_i, j] * scale)),
-                             (int(x_particles[time_i, j] * scale + dx * scale),
-                              int(y_particles[time_i, j] * scale + dy * scale)),
-                             tuple(np.array(to_rgb(f"C{j % 10}")) * 255), 2, lineType=cv2.LINE_AA)
+                            dx = 10 * np.cos(np.radians(orientation_particles[time_i, j]))
+                            dy = 10 * np.sin(np.radians(orientation_particles[time_i, j]))
+                            scale = 1
+                            cv2.line(img, (int(x_particles[time_i, j] * scale), int(y_particles[time_i, j] * scale)),
+                                     (int(x_particles[time_i, j] * scale + dx * scale),
+                                      int(y_particles[time_i, j] * scale + dy * scale)),
+                                     tuple(np.array(to_rgb(f"C{j % 10}")) * 255), 2, lineType=cv2.LINE_AA)
 
-                    cv2.circle(img, (int(x_particles[time_i, j] * scale), int(y_particles[time_i, j] * scale)), 4,
-                               tuple(np.array(to_rgb(f"C{j % 10}")) * 255), -1, lineType=cv2.LINE_AA)
+                            cv2.circle(img, (int(x_particles[time_i, j] * scale), int(y_particles[time_i, j] * scale)), 4,
+                                       tuple(np.array(to_rgb(f"C{j % 10}")) * 255), -1, lineType=cv2.LINE_AA)
 
-                writer.append_data(img)
+                        writer.append_data(img)
 
-            writer.close()
+                    writer.close()
 
-        # Calculate polarizion
-        x = np.cos(np.radians(orientation_particles)).mean(axis=1)
-        y = np.sin(np.radians(orientation_particles)).mean(axis=1)
+                # Calculate polarization over time
+                x = np.cos(np.radians(orientation_particles)).mean(axis=1)
+                y = np.sin(np.radians(orientation_particles)).mean(axis=1)
 
-        polarizations.append(np.sqrt(x**2 + y**2))
+                polarizations.append(np.sqrt(x**2 + y**2))
 
-        ds = []
-        for k in range(10):
-            for l in range(10):
-                if k==l:
-                    continue
+                # Calculate average distance between fish over time
+                ds = []
+                for k in range(n):
+                    for l in range(n):
+                        if k==l:
+                            continue
 
-                ds.append(np.sqrt((x_particles[:, k] - x_particles[:, l])**2 +
-                                  (y_particles[:, k] - y_particles[:, l])**2))
+                        ds.append(np.sqrt((x_particles[:, k] - x_particles[:, l])**2 +
+                                          (y_particles[:, k] - y_particles[:, l])**2))
 
-        ds_over_time.append(np.mean(ds, axis=0))
+                ds_over_time.append(np.mean(ds, axis=0))
 
-    pl.figure(0)
-    if genotype == 0:
-        pl.plot(ts, np.mean(polarizations, axis=0), color=f"C0", label="SCN_SA16474: WT")
-    if genotype == 1:
-        pl.plot(ts, np.mean(polarizations, axis=0), color=f"C1", label="SCN_SA16474: het")
-    if genotype == 2:
-        pl.plot(ts, np.mean(polarizations, axis=0), color=f"C2", label="SCN_NIBR: WT")
-    if genotype == 3:
-        pl.plot(ts, np.mean(polarizations, axis=0), color=f"C3", label="SCN_NIBR: Het")
-    if genotype == 4:
-        pl.plot(ts, np.mean(polarizations, axis=0), color=f"C4", label="DISC: WT")
-    if genotype == 5:
-        pl.plot(ts, np.mean(polarizations, axis=0), color=f"C5", label="DISC: Het")
+            polarizations_repeats.append(np.mean(polarizations, axis=0))
+            ds_over_time_repeats.append(np.mean(ds_over_time, axis=0))
 
-    pl.figure(1)
-    if genotype == 0:
-        pl.plot(ts, np.mean(ds_over_time, axis=0), color=f"C0", label=["SCN_SA16474: WT"])
-    if genotype == 1:
-        pl.plot(ts, np.mean(ds_over_time, axis=0), color=f"C1", label=["SCN_SA16474: het"])
-    if genotype == 2:
-        pl.plot(ts, np.mean(ds_over_time, axis=0), color=f"C2", label=["SCN_NIBR: WT"])
-    if genotype == 3:
-        pl.plot(ts, np.mean(ds_over_time, axis=0), color=f"C3", label=["SCN_NIBR: Het"])
-    if genotype == 4:
-        pl.plot(ts, np.mean(ds_over_time, axis=0), color=f"C4", label="DISC: WT")
-    if genotype == 5:
-        pl.plot(ts, np.mean(ds_over_time, axis=0), color=f"C5", label="DISC: Het")
+        np.save(root_path / experiment / f"polarizations_{genotype}.npy", polarizations_repeats)
+        np.save(root_path / experiment / f"neighbor_distances_{genotype}.npy", ds_over_time_repeats)
 
-pl.figure(0)
-pl.axvspan(20, 80, lw=0, edgecolor='none', facecolor="gray", zorder=0, alpha=0.5)
-#pl.axvspan(100, 160, lw=0, edgecolor='none', facecolor="gray", zorder=0, alpha=0.5)
-#pl.axvspan(180, 240, lw=0, edgecolor='none', facecolor="gray", zorder=0, alpha=0.5)
-pl.axhline(chance_polarization, color='black', label='Chance level')
-pl.xlabel("Time (s)")
-pl.ylabel("Polarization")
-pl.ylim(0, 1)
-pl.legend()
-
-pl.figure(1)
-pl.axvspan(20, 80, lw=0, edgecolor='none', facecolor="gray", zorder=0, alpha=0.5)
-#pl.axvspan(100, 160, lw=0, edgecolor='none', facecolor="gray", zorder=0, alpha=0.5)
-#pl.axvspan(180, 240, lw=0, edgecolor='none', facecolor="gray", zorder=0, alpha=0.5)
-pl.axhline(chance_distance, color='black', label='Chance level')
-pl.xlabel("Time (s)")
-pl.ylim(170, 300)
-pl.ylabel("Average neighbor distance (mm)")
-pl.legend()
-
-pl.show()
-
-# pl.plot(x_particles[:,0], y_particles[:,0], '-')
-# pl.plot(x_particles[:,1], y_particles[:,1], '-')
-# pl.figure()
-#
-# pl.plot(orientation_particles[:, 0])
-# pl.figure()
-# pl.plot(particles_perception[:, 0])
-# pl.plot(particles_perception[:, 1])
-# pl.show()
-# h
-#
-# for k in range(10):
-#     x = np.cos(np.radians(orientation_particles[:, k]))*k
-#     y = np.sin(np.radians(orientation_particles[:, k]))*k
-#
-#     pl.plot(x, y)
-
-#pl.show()
-
-#pl.plot(ts, forward_speed_particles[:, 0])
-# #pl.show()
-#
-# pl.plot(ts[:1000], particles_perception[:1000,0])
-# pl.plot(ts[1000:2600], particles_perception[1000:2600,0])
-# pl.plot(ts[2600:], particles_perception[2600:,0])
-#
-# pl.figure()
-# pl.plot(x_particles[:1000,0], y_particles[:1000,0], '-')
-# pl.plot(x_particles[1000:2600,0], y_particles[1000:2600,0], '-')
-# pl.plot(x_particles[2600:,0], y_particles[2600:,0], '-')
-# pl.xlim(0, 512)
-# pl.ylim(0, 512)
-#
-# pl.figure()
-# pl.plot(x_particles[:,1], y_particles[:,1])
-# pl.plot(x_particles[:,2], y_particles[:,2])
-# pl.plot(x_particles[:,3], y_particles[:,3])
-# pl.plot(x_particles[:,4], y_particles[:,4])
-#
-# pl.show()
-# dsdfgh
-# pl.figure()
-# pl.plot(ts, forward_speed_particles[:,0])
-# pl.figure()
-# pl.plot(ts, turning_speed_particles[:,0])
-# pl.show()
-#
-# pl.figure()
-# pl.plot(ts, orientation_particles[:,0])
-#
-# pl.show()
-# sdf
-#
-# pl.plot(x_particles[:, 0], y_particles[:, 0])
-# pl.plot(x_particles[:, 1], y_particles[:, 1])
-# #pl.show()
-# #hjjjg
-# print(x_particles[:, 0])
-# print(y_particles[:, 0])
 

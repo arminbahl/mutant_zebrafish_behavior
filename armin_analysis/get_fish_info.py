@@ -56,7 +56,7 @@ def get_fish_info(df):
             # Histogram of inter-bout interval
             hist, bin_edges = np.histogram(df.loc[fish_ID, :, :, stim_ID].query("bout_time >= 10 and bout_time < 20 and distance_to_center < 0.95")["inter_bout_interval"],
                                            bins=np.linspace(0, 5, 40), density=False)
-            hist = hist / hist.sum() # Make it a probability histogram
+            hist = hist / hist.sum()  # Make it a probability histogram
 
             for i in range(len(hist)):
                 extracted_binned_features_inter_bout_interval_histograms.append([fish_ID, genotype, stim_ID, (bin_edges[i] + bin_edges[i + 1]) / 2, hist[i]])

@@ -295,17 +295,16 @@ if __name__ == "__main__":
     experiment_names = ["surrogate_fish1",
                         "surrogate_fish2",
                         "surrogate_fish3",
-                        "scn1lab_sa16474", 
-                        "scn1lab_NIBR",  #
-                        "immp2l_summer", # membrane transporter in the mitochondirum
+                        "scn1lab_sa16474", # measured before corona lock down
+                        "scn1lab_NIBR",  # measured before corona lock down
+                        "scn1lab_NIBR_20200708",  # measured after corona lock down
+                        "scn1lab_zirc_20200710",  # measured after corona lock down
+                        "immp2l_summer",  # membrane transporter in the mitochondirum
                         "immp2l_NIBR",
                         "disc1_hetinx",
-                        "chrna2a"] # not so important
+                        "chrna2a"]  # not so important
 
     root_path = Path("/n/home10/abahl/engert_storage_armin/ariel_paper/free_swimming_behavior_data/dot_motion_coherence") / experiment_names[experiment_i]
-
-    #target_genotype = "wt"
-    #random_seed = 0
 
     print(f"Starting. target_genotype: {target_genotype}; optimization_repeat: {random_seed}, root_path: {root_path}")
 

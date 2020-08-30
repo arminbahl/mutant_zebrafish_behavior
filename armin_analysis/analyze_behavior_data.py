@@ -7,7 +7,18 @@ import numpy as np
 
 root_path = Path("/n/home10/abahl/engert_storage_armin/ariel_paper/free_swimming_behavior_data/dot_motion_coherence")
 
-for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710"]:
+for experiment in ["chrna2a",
+                   "disc1_hetinx",
+                   "scn1lab_NIBR_20200708",
+                   "scn1lab_zirc_20200710"]:
+
+    if experiment == "chrna2a":
+        fish_data = pd.read_excel(root_path / experiment / "genotype.xlsx", header=None)
+        fish_data.columns = ['fish_ID', "genotype"]
+
+    if experiment == "disc1_hetinx":
+        fish_data = pd.read_excel(root_path / experiment / "genotype.xlsx", header=None)
+        fish_data.columns = ['fish_ID', "genotype"]
 
     if experiment == "scn1lab_NIBR_20200708":
         fish_data = pd.read_excel(root_path / experiment / "genotype.xlsx", header=0)
@@ -16,6 +27,7 @@ for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710"]:
     if experiment == "scn1lab_zirc_20200710":
         fish_data = pd.read_excel(root_path / experiment / "genotype.xlsx", header=0)
         fish_data.columns = ['fish_ID', "pre_genotype", "genotype"]
+
     print(fish_data)
     # if experiment == "scn1lab_NIBR_20200708":
     #     fish_data.columns = ['fish_ID', "genotype"]
