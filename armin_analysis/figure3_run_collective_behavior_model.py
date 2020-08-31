@@ -217,9 +217,9 @@ print("Chance polarization", chance_polarization)
 # Load the consensus parameter sets
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
 
-for experiment in ["scn1lab_sa16474", "scn1lab_NIBR", "disc1_hetinx"]:
+for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710", "disc1_hetinx"]:
 
-    if experiment == "scn1lab_sa16474" or experiment == "scn1lab_NIBR":
+    if experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
         genotypes = ["wt", "het"]
 
     if experiment == 'disc1_hetinx':
@@ -259,14 +259,14 @@ for experiment in ["scn1lab_sa16474", "scn1lab_NIBR", "disc1_hetinx"]:
 
                 effect_strength_motion = 7
 
-                if experiment == "scn1lab_sa16474" and genotype == "wt":
+                if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
                     effect_strength_clutter = -3
-                if experiment == "scn1lab_sa16474" and genotype == "het":
+                if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
                     effect_strength_clutter = -5
 
-                if experiment == "scn1lab_NIBR" and genotype == "wt":
+                if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
                     effect_strength_clutter = -3
-                if experiment == "scn1lab_NIBR" and genotype == "het":
+                if experiment == "scn1lab_zirc_20200710" and genotype == "het":
                     effect_strength_clutter = -5
 
                 if experiment == "disc1_hetinx" and genotype == "wt":

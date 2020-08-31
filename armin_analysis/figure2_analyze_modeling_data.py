@@ -10,7 +10,13 @@ from fit_integrator_model import leaky_integrator_model2
 
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
 
-for experiment in ["disc1_hetinx"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
+for experiment in ["disc1_hetinx", "scn1lab_zirc_20200710", "scn1lab_NIBR_20200708"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
+
+    if experiment == "disc1_hetinx":
+        genotypes = ["wt", "het", "hom"]
+
+    if experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
+        genotypes = ["wt", "het"]
 
     estimated_parameters = dict({"repeat": [],
                                  "genotype": [],
@@ -41,7 +47,7 @@ for experiment in ["disc1_hetinx"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "su
                                     "same_as_previous": []})
 
 
-        for genotype in ["wt", "het", "hom"]:
+        for genotype in genotypes:
 
             X = np.load(root_path / experiment / f"leaky_integrator_model2_X_{genotype}_{repeat}.npy")
             F = np.load(root_path / experiment / f"leaky_integrator_model2_F_{genotype}_{repeat}.npy")
@@ -66,7 +72,6 @@ for experiment in ["disc1_hetinx"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "su
                             errors_over_generations["error"].append(F[generation, :, error_i].min())
                         else:
                             errors_over_generations["error"].append(F_sum[generation, :].min())
-
 
 
             # Get the best parameter
@@ -150,6 +155,8 @@ for experiment in ["disc1_hetinx"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "su
     df.to_excel(root_path / experiment / "estimated_model_parameters.xlsx", sheet_name="data")
     df.to_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data")
 
+
+    """
     #######
     # Also run the consensus model simulation
     all_data_experiment = dict({"fish_ID": [],
@@ -184,6 +191,8 @@ for experiment in ["disc1_hetinx"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "su
                                                T,
                                                bout_clock_probability_below_threshold,
                                                bout_clock_probability_above_threshold)
+
+        print(bout_counter)
 
         all_data_experiment["fish_ID"].extend([f"fish_{genotype}_{int(fish_ID)}" for fish_ID in all_data[:bout_counter - 1, 0]])
         all_data_experiment["genotype"].extend([genotype] * (bout_counter - 1))
@@ -223,6 +232,7 @@ for experiment in ["disc1_hetinx"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "su
     df_extracted_binned_features_heading_angle_change_histograms.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="extracted_binned_features_heading_angle_change_histograms", complevel=9)
     df_extracted_binned_features_inter_bout_interval_histograms.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="extracted_binned_features_inter_bout_interval_histograms", complevel=9)
     df_gmm_fitting_results.to_hdf(root_path / experiment / "all_data_best_model_consensus.h5", key="gmm_fitting_results", complevel=9)
+    """
 
 
 

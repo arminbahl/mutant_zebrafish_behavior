@@ -8,14 +8,14 @@ import pandas as pd
 
 fig = myfig.Figure(title=f"Figure 2")
 
-# experiment = "scn1lab_NIBR"
+# experiment = "scn1lab_NIBR_20200708"
 # mutant_name= 'het'
 # basecolor = "C3"
 
-# experiment = "scn1lab_sa16474"
+# experiment = "scn1lab_zirc_20200710"
 # mutant_name= 'het'
 # basecolor = "red"
-#
+
 experiment = "disc1_hetinx"
 mutant_name= 'hom'
 basecolor = "C4"
@@ -23,47 +23,79 @@ basecolor = "C4"
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
 target_path = Path("/Users/arminbahl/Dropbox/pandas_data_for_ariel/paper/figures")
 
-for data_file in ["all_data.h5", "all_data_best_model_consensus.h5"]:
-    if data_file == "all_data.h5":
+df_estimated_parameters_wt = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == 'wt'").droplevel(["genotype"])
+df_estimated_parameters_mutant = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @mutant_name").droplevel(["genotype"])
+
+df_minimal_error_gen0_wt = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == 'wt' and generation == 0").droplevel(["genotype", "generation"])
+df_minimal_error_gen0_mutant = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == @mutant_name and generation == 0").droplevel(["genotype", "generation"])
+
+df_minimal_error_gen79_wt = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == 'wt' and generation == 79").droplevel(["genotype", "generation"])
+df_minimal_error_gen79_mutant = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == @mutant_name and generation == 79").droplevel(["genotype", "generation"])
+
+best_repeat_model_wt = df_minimal_error_gen79_wt.query("error_i == 5")["error"].argmin()
+best_repeat_model_mutant = df_minimal_error_gen79_mutant.query("error_i == 5")["error"].argmin()
+
+for data_model in [0, 1]:
+
+    if data_model == 0:
         ypos = 22
-    else:
+        df_extracted_features_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_features")
+        df_extracted_binned_features_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features")
+        df_extracted_binned_features_same_direction_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_same_direction")
+        df_extracted_binned_features_heading_angle_change_histograms_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_heading_angle_change_histograms")
+        df_extracted_binned_features_inter_bout_interval_histograms_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_inter_bout_interval_histograms")
+
+        df_extracted_features_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_features")
+        df_extracted_binned_features_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features")
+        df_extracted_binned_features_same_direction_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_same_direction")
+        df_extracted_binned_features_heading_angle_change_histograms_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_heading_angle_change_histograms")
+        df_extracted_binned_features_inter_bout_interval_histograms_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_inter_bout_interval_histograms")
+
+
+    if data_model == 1:
         ypos = 14
+        df_extracted_features_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_features")
+        df_extracted_binned_features_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features")
+        df_extracted_binned_features_same_direction_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_same_direction")
+        df_extracted_binned_features_heading_angle_change_histograms_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_heading_angle_change_histograms")
+        df_extracted_binned_features_inter_bout_interval_histograms_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_inter_bout_interval_histograms")
 
-    df_extracted_features = pd.read_hdf(root_path / experiment / data_file, key="extracted_features")
-    df_extracted_binned_features = pd.read_hdf(root_path / experiment / data_file, key="extracted_binned_features")
-    df_extracted_binned_features_same_direction = pd.read_hdf(root_path / experiment / data_file, key="extracted_binned_features_same_direction")
-    df_extracted_binned_features_heading_angle_change_histograms = pd.read_hdf(root_path / experiment / data_file, key="extracted_binned_features_heading_angle_change_histograms")
-    df_extracted_binned_features_inter_bout_interval_histograms = pd.read_hdf(root_path / experiment / data_file, key="extracted_binned_features_inter_bout_interval_histograms")
+        df_extracted_features_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_features")
+        df_extracted_binned_features_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features")
+        df_extracted_binned_features_same_direction_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_same_direction")
+        df_extracted_binned_features_heading_angle_change_histograms_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_heading_angle_change_histograms")
+        df_extracted_binned_features_inter_bout_interval_histograms_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_inter_bout_interval_histograms")
 
-    correctness_as_function_of_coherence_wt_mean = df_extracted_features.query("genotype == 'wt'").groupby("stim").mean()["correctness"]
-    correctness_as_function_of_coherence_wt_sem = df_extracted_features.query("genotype == 'wt'").groupby("stim").sem()["correctness"]
 
-    interbout_interval_as_function_of_coherence_wt_mean = (df_extracted_features.query("genotype == 'wt'")["inter_bout_interval"]).groupby("stim").mean()
-    interbout_interval_as_function_of_coherence_wt_sem = (df_extracted_features.query("genotype == 'wt'")["inter_bout_interval"]).groupby("stim").sem()
+    correctness_as_function_of_coherence_wt_mean = df_extracted_features_wt.query("genotype == 'wt'").groupby("stim").mean()["correctness"]
+    correctness_as_function_of_coherence_wt_sem = df_extracted_features_wt.query("genotype == 'wt'").groupby("stim").sem()["correctness"]
 
-    binned_correctness_wt_mean = df_extracted_binned_features.query("genotype == 'wt'").groupby(["stim", "bin"]).mean()
-    binned_correctness_wt_sem = df_extracted_binned_features.query("genotype == 'wt'").groupby(["stim", "bin"]).sem()
+    interbout_interval_as_function_of_coherence_wt_mean = (df_extracted_features_wt.query("genotype == 'wt'")["inter_bout_interval"]).groupby("stim").mean()
+    interbout_interval_as_function_of_coherence_wt_sem = (df_extracted_features_wt.query("genotype == 'wt'")["inter_bout_interval"]).groupby("stim").sem()
 
-    binned_same_direction_wt_mean = df_extracted_binned_features_same_direction.query("genotype == 'wt'").groupby(["bin"]).mean()
-    binned_same_direction_wt_sem = df_extracted_binned_features_same_direction.query("genotype == 'wt'").groupby(["bin"]).sem()
+    binned_correctness_wt_mean = df_extracted_binned_features_wt.query("genotype == 'wt'").groupby(["stim", "bin"]).mean()
+    binned_correctness_wt_sem = df_extracted_binned_features_wt.query("genotype == 'wt'").groupby(["stim", "bin"]).sem()
 
-    correctness_as_function_of_coherence_mutant_mean = df_extracted_features.query("genotype == @mutant_name").groupby("stim").mean()["correctness"]
-    correctness_as_function_of_coherence_mutant_sem = df_extracted_features.query("genotype == @mutant_name").groupby("stim").sem()["correctness"]
+    binned_same_direction_wt_mean = df_extracted_binned_features_same_direction_wt.query("genotype == 'wt'").groupby(["bin"]).mean()
+    binned_same_direction_wt_sem = df_extracted_binned_features_same_direction_wt.query("genotype == 'wt'").groupby(["bin"]).sem()
 
-    interbout_interval_as_function_of_coherence_mutant_mean = (df_extracted_features.query("genotype == @mutant_name")["inter_bout_interval"]).groupby("stim").mean()
-    interbout_interval_as_function_of_coherence_mutant_sem = (df_extracted_features.query("genotype == @mutant_name")["inter_bout_interval"]).groupby("stim").sem()
+    histogram_heading_angle_change_wt_mean = df_extracted_binned_features_heading_angle_change_histograms_wt.query("genotype == 'wt'").groupby(["stim", "bin"]).mean()
+    histogram_heading_angle_change_wt_sem = df_extracted_binned_features_heading_angle_change_histograms_wt.query("genotype == 'wt'").groupby(["stim", "bin"]).sem()
 
-    binned_correctness_mutant_mean = df_extracted_binned_features.query("genotype == @mutant_name").groupby(["stim", "bin"]).mean()
-    binned_correctness_mutant_sem = df_extracted_binned_features.query("genotype == @mutant_name").groupby(["stim", "bin"]).sem()
+    correctness_as_function_of_coherence_mutant_mean = df_extracted_features_mutant.query("genotype == @mutant_name").groupby("stim").mean()["correctness"]
+    correctness_as_function_of_coherence_mutant_sem = df_extracted_features_mutant.query("genotype == @mutant_name").groupby("stim").sem()["correctness"]
 
-    binned_same_direction_mutant_mean = df_extracted_binned_features_same_direction.query("genotype == @mutant_name").groupby(["bin"]).mean()
-    binned_same_direction_mutant_sem = df_extracted_binned_features_same_direction.query("genotype == @mutant_name").groupby(["bin"]).sem()
+    interbout_interval_as_function_of_coherence_mutant_mean = (df_extracted_features_mutant.query("genotype == @mutant_name")["inter_bout_interval"]).groupby("stim").mean()
+    interbout_interval_as_function_of_coherence_mutant_sem = (df_extracted_features_mutant.query("genotype == @mutant_name")["inter_bout_interval"]).groupby("stim").sem()
 
-    histogram_heading_angle_change_wt_mean = df_extracted_binned_features_heading_angle_change_histograms.query("genotype == 'wt'").groupby(["stim", "bin"]).mean()
-    histogram_heading_angle_change_wt_sem = df_extracted_binned_features_heading_angle_change_histograms.query("genotype == 'wt'").groupby(["stim", "bin"]).sem()
+    binned_correctness_mutant_mean = df_extracted_binned_features_mutant.query("genotype == @mutant_name").groupby(["stim", "bin"]).mean()
+    binned_correctness_mutant_sem = df_extracted_binned_features_mutant.query("genotype == @mutant_name").groupby(["stim", "bin"]).sem()
 
-    histogram_heading_angle_change_mutant_mean = df_extracted_binned_features_heading_angle_change_histograms.query("genotype == @mutant_name").groupby(["stim", "bin"]).mean()
-    histogram_heading_angle_change_mutant_sem = df_extracted_binned_features_heading_angle_change_histograms.query("genotype == @mutant_name").groupby(["stim", "bin"]).sem()
+    binned_same_direction_mutant_mean = df_extracted_binned_features_same_direction_mutant.query("genotype == @mutant_name").groupby(["bin"]).mean()
+    binned_same_direction_mutant_sem = df_extracted_binned_features_same_direction_mutant.query("genotype == @mutant_name").groupby(["bin"]).sem()
+
+    histogram_heading_angle_change_mutant_mean = df_extracted_binned_features_heading_angle_change_histograms_mutant.query("genotype == @mutant_name").groupby(["stim", "bin"]).mean()
+    histogram_heading_angle_change_mutant_sem = df_extracted_binned_features_heading_angle_change_histograms_mutant.query("genotype == @mutant_name").groupby(["stim", "bin"]).sem()
 
     #####
     # Correctness as function of coherence
@@ -83,7 +115,7 @@ for data_file in ["all_data.h5", "all_data_best_model_consensus.h5"]:
     p0 = myfig.Plot(fig, num='b2', xpos=10, ypos=ypos - 1.5, plot_height=1.25, plot_width=1.25,
                                        lw=1, pc='white', errorbar_area=False,
                                        xl="Coherence (%)", xmin=-15, xmax=115, xticks=[0, 25, 50, 100], hlines=[50],
-                                       yl="Interbout\ninterval (s)", ymin=0.7, ymax=1.8, yticks=[0.8, 1.2, 1.6])
+                                       yl="Interbout\ninterval (s)", ymin=0.6, ymax=1.9, yticks=[0.7, 1.2, 1.7])
 
     myfig.Line(p0, x=[0, 25, 50, 100], y=interbout_interval_as_function_of_coherence_wt_mean, yerr=interbout_interval_as_function_of_coherence_wt_sem, lc="black", zorder=1)
     myfig.Scatter(p0, x=[0, 25, 50, 100], y=interbout_interval_as_function_of_coherence_wt_mean, lc='black', pt='o', lw=0.5, ps=9.8, pc='white', zorder=2)
@@ -159,8 +191,6 @@ for data_file in ["all_data.h5", "all_data_best_model_consensus.h5"]:
         myfig.Line(p0, x=histogram_heading_angle_change_mutant_mean.loc[i,:].index, y=histogram_heading_angle_change_mutant_mean.loc[i,:].values[:,0], yerr=histogram_heading_angle_change_wt_sem.loc[i,:].values[:,0], lc=c, zorder=1)
 
 
-df_estimated_parameters_wt = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == 'wt'").droplevel(["genotype"])
-df_estimated_parameters_mutant = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @mutant_name").droplevel(["genotype"])
 
 # Do a bootstrap test
 def bootstrap(vals1, vals2):
@@ -168,10 +198,10 @@ def bootstrap(vals1, vals2):
     combined = np.r_[vals1, vals2]
     ds = []
     for i in range(10000):
-        ds.append(np.random.choice(combined, 12).mean() - np.random.choice(combined, 12).mean())
+        ds.append(np.median(np.random.choice(combined, 12)) - np.median(np.random.choice(combined, 12)))
 
     ds = np.array(ds)
-    d_real = np.abs(vals1.mean() - vals2.mean())
+    d_real = np.abs(np.median(vals1) - np.median(vals2))
 
     p = (ds > d_real).sum() / len(ds)
     print(p)
@@ -186,15 +216,9 @@ def bootstrap(vals1, vals2):
 
     return p, stars
 
-
 # Show errors over fitting runs
 #####
 # Display the evolution of error functions over generation
-df_minimal_error_gen0_wt = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == 'wt' and generation == 0").droplevel(["genotype", "generation"])
-df_minimal_error_gen0_mutant = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == @mutant_name and generation == 0").droplevel(["genotype", "generation"])
-
-df_minimal_error_gen79_wt = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == 'wt' and generation == 79").droplevel(["genotype", "generation"])
-df_minimal_error_gen79_mutant = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == @mutant_name and generation == 79").droplevel(["genotype", "generation"])
 
 p0 = myfig.Plot(fig, num='b', xpos=2.0, ypos=7, plot_height=0.75, plot_width=1.5,
                                lw=1, pc='white', errorbar_area=False,
