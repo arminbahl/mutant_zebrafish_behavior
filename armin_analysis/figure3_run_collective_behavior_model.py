@@ -10,6 +10,15 @@ from PIL import Image
 from matplotlib.colors import to_rgb
 import pandas as pd
 from scipy.interpolate import interp1d
+import scipy.io as sio
+
+tau_forward_speed = 0.1  # s
+tau_turning_speed = 0.1  # s
+fish_size = 20  # 20 pixel (one body length = 2 mm);
+arena_size = 1024  # arena is 1024 pixel ( = 102 mm)
+fish_forward_speed = 20  # 20 pixels per bout
+dt = 0.01
+n = 5
 
 
 @jit(nopython=True)
@@ -43,11 +52,6 @@ def simulate_particles(tau,
                        turning_speed_particles,
                        forward_speed_particles):
 
-    tau_forward_speed = 0.1  # s
-    tau_turning_speed = 0.1  # s
-    fish_size = 10  # 10 pixel (one body length); arena is 512 pixel
-    fish_forward_speed = 10
-
     n_particles = integrated_motion_perception_particles.shape[1]
 
     for time_i in range(1, ts.shape[0]):
@@ -58,59 +62,57 @@ def simulate_particles(tau,
             current_motion_perception_particle_i = 0
             current_clutter_perception_particle_i = 0
 
-            # turn on percepttion between 20 and 60 s
-            if 20 <= ts[time_i] < 80:
+            # Perception is always on
+            for particle_j in range(n_particles):
+                if particle_i == particle_j:
+                    continue
 
-                for particle_j in range(n_particles):
-                    if particle_i == particle_j:
-                        continue
+                distance = np.sqrt(
+                    (x_particles[time_i - 1, particle_i] - x_particles[time_i - 1, particle_j]) ** 2 +
+                    (y_particles[time_i - 1, particle_i] - y_particles[time_i - 1, particle_j]) ** 2)
 
-                    distance = np.sqrt(
-                        (x_particles[time_i - 1, particle_i] - x_particles[time_i - 1, particle_j]) ** 2 +
-                        (y_particles[time_i - 1, particle_i] - y_particles[time_i - 1, particle_j]) ** 2)
+                ang1 = orientation_particles[time_i - 1, particle_i]
+                ang2 = orientation_particles[time_i - 1, particle_j]
 
-                    ang1 = orientation_particles[time_i - 1, particle_i]
-                    ang2 = orientation_particles[time_i - 1, particle_j]
+                if ang2 > ang1:
+                    angle_between_orientation_vectors = ang1 - ang2 + 360
+                else:
+                    angle_between_orientation_vectors = ang1 - ang2
 
-                    if ang2 > ang1:
-                        angle_between_orientation_vectors = ang1 - ang2 + 360
-                    else:
-                        angle_between_orientation_vectors = ang1 - ang2
+                # is it on the right or the left side?
+                angle_between_fish = determine_angle_between_fish(ang1,
+                                                x_particles[time_i - 1, particle_i],
+                                                y_particles[time_i - 1, particle_i],
+                                                x_particles[time_i - 1, particle_j],
+                                                y_particles[time_i - 1, particle_j])
 
-                    # is it on the right or the left side?
-                    angle_between_fish = determine_angle_between_fish(ang1,
-                                                    x_particles[time_i - 1, particle_i],
-                                                    y_particles[time_i - 1, particle_i],
-                                                    x_particles[time_i - 1, particle_j],
-                                                    y_particles[time_i - 1, particle_j])
+                perpendicular_motion_drive = effect_strength_motion * \
+                                             forward_speed_particles[time_i - 1, particle_j] * \
+                                             np.sin(np.radians(angle_between_orientation_vectors)) / distance
 
-                    perpendicular_motion_drive = effect_strength_motion * \
-                                                 forward_speed_particles[time_i - 1, particle_j] * \
-                                                 np.sin(np.radians(angle_between_orientation_vectors)) / distance
+                # Generally, fish are repulsive based on angle the other fish casts on the retina!
+                size_on_retina = 2*np.arctan(fish_size/(2*distance))
 
-                    # Generally, fish are repulsive based on angle the other fish casts on the retina!
-                    size_on_retina = 2*np.arctan(fish_size/(2*distance))
+                if 0 <= angle_between_fish < 180:
+                    current_clutter_perception_particle_i += effect_strength_clutter * size_on_retina
+                if 180 <= angle_between_fish < 360:
+                    current_clutter_perception_particle_i -= effect_strength_clutter * size_on_retina
 
-                    if 0 <= angle_between_fish < 180:
-                        current_clutter_perception_particle_i += effect_strength_clutter * size_on_retina
-                    if 180 <= angle_between_fish < 360:
-                        current_clutter_perception_particle_i -= effect_strength_clutter * size_on_retina
+                # outward motion
+                if 0 <= angle_between_fish < 180 and perpendicular_motion_drive > 0:
+                    current_motion_perception_particle_i += perpendicular_motion_drive#*0.7
 
-                    # outward motion
-                    if 0 <= angle_between_fish < 180 and perpendicular_motion_drive > 0:
-                        current_motion_perception_particle_i += perpendicular_motion_drive#*0.7
+                # inward motion
+                if 0 <= angle_between_fish < 180 and perpendicular_motion_drive <= 0:
+                    current_motion_perception_particle_i += perpendicular_motion_drive#*1.4  # want to keep it on average the same as before
 
-                    # inward motion
-                    if 0 <= angle_between_fish < 180 and perpendicular_motion_drive <= 0:
-                        current_motion_perception_particle_i += perpendicular_motion_drive#*1.4  # want to keep it on average the same as before
+                # inward motion
+                if 180 <= angle_between_fish < 360 and perpendicular_motion_drive > 0:
+                    current_motion_perception_particle_i += perpendicular_motion_drive#*1.4
 
-                    # inward motion
-                    if 180 <= angle_between_fish < 360 and perpendicular_motion_drive > 0:
-                        current_motion_perception_particle_i += perpendicular_motion_drive#*1.4
-
-                    # outward motion
-                    if 180 <= angle_between_fish < 360 and perpendicular_motion_drive <= 0:
-                        current_motion_perception_particle_i += perpendicular_motion_drive#*0.7
+                # outward motion
+                if 180 <= angle_between_fish < 360 and perpendicular_motion_drive <= 0:
+                    current_motion_perception_particle_i += perpendicular_motion_drive#*0.7
 
             # # motion to the right
             # if 100 <= ts[time_i] < 160:
@@ -163,116 +165,127 @@ def simulate_particles(tau,
             #x_particles[time_i, particle_i] = x_particles[time_i, particle_i] % 512
             #y_particles[time_i, particle_i] = y_particles[time_i, particle_i] % 512
 
-            #bounce of the wall
-            if x_particles[time_i, particle_i] >= 512:
-                x_particles[time_i, particle_i] = 511 - (x_particles[time_i, particle_i] - 512)
-                recompute_orientation = True
+            #bounce of the circlular wall
+            if ((x_particles[time_i, particle_i] - arena_size/2)**2 +
+                (y_particles[time_i, particle_i]-arena_size/2)**2) >= (arena_size/2)**2:
 
-            if y_particles[time_i, particle_i] >= 512:
-                y_particles[time_i, particle_i] = 511 - (y_particles[time_i, particle_i] - 512)
-                recompute_orientation = True
+                x_particles[time_i, particle_i] = x_particles[time_i - 1, particle_i]
+                y_particles[time_i, particle_i] = y_particles[time_i - 1, particle_i]
 
-            if x_particles[time_i, particle_i] < 0:
-                x_particles[time_i, particle_i] = 0 - (x_particles[time_i, particle_i] - 0)
-                recompute_orientation = True
+                orientation_particles[time_i, particle_i] = np.random.random()*360
 
-            if y_particles[time_i, particle_i] < 0:
-                y_particles[time_i, particle_i] = 0 - (y_particles[time_i, particle_i] - 0)
-                recompute_orientation = True
-
-            if recompute_orientation == True:
-                orientation_particles[time_i, particle_i] = np.degrees(np.arctan2(y_particles[time_i, particle_i] - y_particles[time_i - 1, particle_i],
-                                                                                  x_particles[time_i, particle_i] - x_particles[time_i - 1, particle_i]))
+            #     recompute_orientation = True
+            #
+            # if y_particles[time_i, particle_i] >= arena_size:
+            #     y_particles[time_i, particle_i] = x_particles[time_i - 1, particle_i]
+            #     recompute_orientation = True
+            #
+            # if x_particles[time_i, particle_i] < 0:
+            #     x_particles[time_i, particle_i] = 0 - (x_particles[time_i, particle_i] - 0)
+            #     recompute_orientation = True
+            #
+            # if y_particles[time_i, particle_i] < 0:
+            #     y_particles[time_i, particle_i] = 0 - (y_particles[time_i, particle_i] - 0)
+            #     recompute_orientation = True
+            #
+            # if recompute_orientation == True:
+            #     orientation_particles[time_i, particle_i] = np.degrees(np.arctan2(y_particles[time_i, particle_i] - y_particles[time_i - 1, particle_i],
+            #                                                                       x_particles[time_i, particle_i] - x_particles[time_i - 1, particle_i]))
 
             orientation_particles[time_i, particle_i] = orientation_particles[time_i, particle_i] % 360
 
-dt = 0.01
-n = 8
 
-# Compute the chance levels
-x_particles = np.random.random(size=(int(100/dt), n))*512
-y_particles = np.random.random(size=(int(100/dt), n))*512
-orientation_particles = np.random.random(size=(int(100/dt), n))*360
-
-# calculate chance distance
-ds = []
-for k in range(n):
-    for l in range(n):
-        if k == l:
-            continue
-
-        ds.append(np.sqrt((x_particles[:, k] - x_particles[:, l])**2 +
-                          (y_particles[:, k] - y_particles[:, l])**2).mean())
-
-chance_distance = np.mean(ds)
-
-print("chance_distance", chance_distance)
-# Calculate polarizion chance
-x = np.cos(np.radians(orientation_particles)).mean(axis=1)
-y = np.sin(np.radians(orientation_particles)).mean(axis=1)
-
-chance_polarization = np.sqrt(x**2 + y**2).mean()
-print("Chance polarization", chance_polarization)
 
 # Load the consensus parameter sets
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
+root_output_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/model_results")
 
-for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710", "disc1_hetinx"]:
+for age in [7, 14, 21]:
+    for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710", "disc1_hetinx"]:
 
-    if experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
-        genotypes = ["wt", "het"]
+        if experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
+            genotypes = ["wt", "het"]
 
-    if experiment == 'disc1_hetinx':
-        genotypes = ["wt", "hom"]
+        if experiment == 'disc1_hetinx':
+            genotypes = ["wt", "hom"]
 
-    for genotype in genotypes:
+        output_path = root_output_path / f"{experiment}_{age}dpf"
+        output_path.mkdir(exist_ok=True)
 
-        df_estimated_parameters_model = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @genotype").droplevel(["genotype"])
+        for genotype in genotypes:
 
-        polarizations_repeats = []
-        ds_over_time_repeats = []
-        speed_over_time_repeats = []
+            df_estimated_parameters_model = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @genotype").droplevel(["genotype"])
 
-        for j in range(12):
+            polarizations_repeats = []
+            ds_over_time_repeats = []
+            speed_over_time_repeats = []
 
-            tau = df_estimated_parameters_model['tau'][j]
-            sigma = df_estimated_parameters_model['noise_sigma'][j]
-            T = df_estimated_parameters_model['T'][j]
-            p_below = df_estimated_parameters_model['bout_clock_probability_below_threshold'][j]
-            p_above = df_estimated_parameters_model['bout_clock_probability_above_threshold'][j]
 
-            polarizations = []
-            ds_over_time = []
-            speed_over_time = []
+            for j in range(12):
 
-            for k in range(50):
-                print(j,k)
-                ts = np.zeros(int(100/dt))
-                integrated_motion_perception_particles = np.zeros((int(100/dt), n))
-                current_clutter_perception_particles = np.zeros((int(100/dt), n))
+                tau = df_estimated_parameters_model['tau'][j]
+                sigma = df_estimated_parameters_model['noise_sigma'][j]
+                T = df_estimated_parameters_model['T'][j]
+                p_below = df_estimated_parameters_model['bout_clock_probability_below_threshold'][j]
+                p_above = df_estimated_parameters_model['bout_clock_probability_above_threshold'][j]
 
-                x_particles = np.random.random(size=(int(100/dt), n)) * 512
-                y_particles = np.random.random(size=(int(100/dt), n)) * 512
-                orientation_particles = np.random.random(size=(int(100/dt), n)) * 360
-                forward_speed_particles = np.zeros((int(100/dt), n))
-                turning_speed_particles = np.zeros((int(100/dt), n))
+                polarizations = []
+                ds_over_time = []
+                speed_over_time = []
 
-                effect_strength_motion = 7
+                ts = np.zeros(int(600/dt))
+                integrated_motion_perception_particles = np.zeros((int(600/dt), n))
+                current_clutter_perception_particles = np.zeros((int(600/dt), n))
+
+                x_particles = np.zeros((int(600/dt), n))
+                y_particles = np.zeros((int(600/dt), n))
+                orientation_particles = np.zeros((int(600/dt), n)) * 360
+                forward_speed_particles = np.zeros((int(600/dt), n))
+                turning_speed_particles = np.zeros((int(600/dt), n))
+
+                for i in range(n):
+                    while True:
+                        x = np.random.random() * arena_size
+                        y = np.random.random() * arena_size
+
+                        if (x - arena_size/2)**2 + (y - arena_size/2)**2 < (arena_size/2)**2:
+                            break
+
+                    x_particles[0, i] = x
+                    y_particles[0, i] = y
+                    orientation_particles[0, i] = np.random.random()*360
+
+
+                effect_strength_motion = 1
+
+                if age == 7:
+                    effect_strength_clutter = -3  # repulsive
+                if age == 14:
+                    effect_strength_clutter = 0  # neutral
+                if age == 21:
+                    effect_strength_clutter = 3  # attractive
+
+                #effect_strength_motion = 0
+                #effect_strength_clutter = 0
 
                 if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
-                    effect_strength_clutter = -3
+                    pass
+
                 if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
-                    effect_strength_clutter = -5
+                    effect_strength_clutter -= 2 # make it more repulsive
 
                 if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
-                    effect_strength_clutter = -3
+                    pass
+
                 if experiment == "scn1lab_zirc_20200710" and genotype == "het":
-                    effect_strength_clutter = -5
+                    effect_strength_clutter -= 2 # make it more repulsive
 
                 if experiment == "disc1_hetinx" and genotype == "wt":
-                    effect_strength_clutter = -3
+                    pass
+
                 if experiment == "disc1_hetinx" and genotype == "hom":
-                    effect_strength_clutter = -2
+                    effect_strength_clutter += 2 # make it more attractive
+
 
                 simulate_particles(tau, sigma, T, p_below, p_above,
                                    effect_strength_motion,
@@ -287,22 +300,23 @@ for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710", "disc1_heti
                                    turning_speed_particles,
                                    forward_speed_particles)
 
-                if j == 0 and k == 0:
-                    writer = imageio.get_writer(root_path / experiment / f'collective_model_{genotype}.mp4', codec='libx264', fps=30,
+                if j == 0:
+                    writer = imageio.get_writer(output_path / f'collective_model_example_{genotype}.mp4', codec='libx264', fps=30,
                                                 ffmpeg_params=["-b:v", "8M"])
 
                     node_colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"]
 
                     for time_i in tqdm(np.arange(0, ts.shape[0] - 1, 20)):
 
-                        img = np.zeros((512, 512), dtype=np.uint8)
+                        img = np.zeros((arena_size, arena_size), dtype=np.uint8)
                         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
 
-                        cv2.putText(img, f"{ts[time_i]:.1f} s", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
+                        cv2.putText(img, f"{ts[time_i]:.1f} s", (40, 60), cv2.FONT_HERSHEY_SIMPLEX, fontScale=1.2,
                                     color=(255, 255, 255))
-                        if 20 < ts[time_i] < 80:
-                            cv2.putText(img, f"Fish-motion perception ON", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
-                                        color=(255, 255, 255))
+
+                        # if 20 < ts[time_i] < 100:
+                        #     cv2.putText(img, f"Fish-motion perception ON", (40, 100), cv2.FONT_HERSHEY_SIMPLEX, fontScale=1.2,
+                        #                 color=(255, 255, 255))
 
                         # if 100 < ts[time_i] < 160:
                         #     cv2.putText(img, f"Ground moving right", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.6,
@@ -314,58 +328,52 @@ for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710", "disc1_heti
 
                         for j in range(x_particles.shape[1]):
 
-                            dx = 10 * np.cos(np.radians(orientation_particles[time_i, j]))
-                            dy = 10 * np.sin(np.radians(orientation_particles[time_i, j]))
-                            scale = 1
-                            cv2.line(img, (int(x_particles[time_i, j] * scale), int(y_particles[time_i, j] * scale)),
-                                     (int(x_particles[time_i, j] * scale + dx * scale),
-                                      int(y_particles[time_i, j] * scale + dy * scale)),
-                                     tuple(np.array(to_rgb(f"C{j % 10}")) * 255), 2, lineType=cv2.LINE_AA)
+                            dx = 20 * np.cos(np.radians(orientation_particles[time_i, j])) # 2 mm long fish
+                            dy = 20 * np.sin(np.radians(orientation_particles[time_i, j]))
 
-                            cv2.circle(img, (int(x_particles[time_i, j] * scale), int(y_particles[time_i, j] * scale)), 4,
+                            cv2.line(img, (int(x_particles[time_i, j] ), int(y_particles[time_i, j] )),
+                                     (int(x_particles[time_i, j]  + dx ),
+                                      int(y_particles[time_i, j]  + dy )),
+                                     tuple(np.array(to_rgb(f"C{j % 10}")) * 255), 5, lineType=cv2.LINE_AA)
+
+                            cv2.circle(img, (int(x_particles[time_i, j] ), int(y_particles[time_i, j] )), 8,
                                        tuple(np.array(to_rgb(f"C{j % 10}")) * 255), -1, lineType=cv2.LINE_AA)
 
                         writer.append_data(img)
 
                     writer.close()
 
-                # Calculate polarization over time
-                x = np.cos(np.radians(orientation_particles)).mean(axis=1)
-                y = np.sin(np.radians(orientation_particles)).mean(axis=1)
+                    # also make a plot of the trajectory
+                    #fig = myfig.Figure(title=f"Example trajectory")
+                    pl.figure(figsize=(10,10))
+                    for fish_i in range(n):
 
-                polarizations.append(np.sqrt(x**2 + y**2))
+                        pl.quiver(x_particles[:,fish_i][::20],
+                                  y_particles[:,fish_i][::20],
+                                  20 * np.cos(np.radians(orientation_particles[:, fish_i]))[::20],
+                                  20 * np.sin(np.radians(orientation_particles[:, fish_i]))[::20],
+                                  color = f'C{fish_i}',)
+                    pl.xlim(0, 1024)
+                    pl.ylim(0, 1024)
+                    pl.savefig(output_path / f'collective_model_example_{genotype}.pdf')
+                    pl.close()
 
-                # Calculate average distance between fish over time
-                ds = []
-                for k in range(n):
-                    for l in range(n):
-                        if k==l:
-                            continue
 
-                        ds.append(np.sqrt((x_particles[:, k] - x_particles[:, l])**2 +
-                                          (y_particles[:, k] - y_particles[:, l])**2))
+                ang = np.deg2rad(np.arange(0, 360, 0.1))
 
-                ds_over_time.append(np.mean(ds, axis=0))
+                # Store this in a folder in the same style as Roy stores his behavior data.
+                simple_data = dict({"body_angle": orientation_particles.T,
+                                    "x_f": x_particles.T,
+                                    "y_f": y_particles.T,
+                                    "T": ts,
+                                    "borders": np.array([np.cos(ang)*arena_size/2 + arena_size/2,
+                                                np.sin(ang)*arena_size/2 + arena_size/2]).T})
+                Header_new = dict({"ratio_pix_cm": [10]})
 
-                # Calculate the speed over time
-                # filter the x, y
-                new_time = np.arange(0, 100, 1)
-                f = interp1d(ts, x_particles, axis=0, bounds_error=False)
-                x_particles_filtered = f(new_time)
+                output_path2 = output_path / genotype / f"5fish_{j}"
+                output_path2.mkdir(parents=True, exist_ok=True)
 
-                f = interp1d(ts, y_particles, axis=0, bounds_error=False)
-                y_particles_filtered = f(new_time)
-
-                speed = np.sqrt(np.diff(x_particles_filtered, axis=0)**2 + np.diff(y_particles_filtered, axis=0)**2)
-
-                speed_over_time.append(np.mean(speed, axis=1))
-
-            polarizations_repeats.append(np.mean(polarizations, axis=0))
-            ds_over_time_repeats.append(np.mean(ds_over_time, axis=0))
-            speed_over_time_repeats.append(np.mean(speed_over_time, axis=0))
-
-        np.save(root_path / experiment / f"polarizations_{genotype}.npy", polarizations_repeats)
-        np.save(root_path / experiment / f"neighbor_distances_{genotype}.npy", ds_over_time_repeats)
-        np.save(root_path / experiment / f"speed_over_time_{genotype}.npy", speed_over_time_repeats)
+                sio.savemat(output_path2 / "simple_data.mat", simple_data)
+                sio.savemat(output_path2 / "Header_new.mat", Header_new)
 
 
