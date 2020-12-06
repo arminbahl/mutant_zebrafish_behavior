@@ -198,9 +198,9 @@ def simulate_particles(tau,
 
 # Load the consensus parameter sets
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
-root_output_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/model_results")
+root_output_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/model_results_11112020")
 
-for age in [7, 14, 21]:
+for age in [7, 21]:
     for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710", "disc1_hetinx"]:
 
         if experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
@@ -219,7 +219,6 @@ for age in [7, 14, 21]:
             polarizations_repeats = []
             ds_over_time_repeats = []
             speed_over_time_repeats = []
-
 
             for j in range(12):
 
@@ -257,35 +256,33 @@ for age in [7, 14, 21]:
 
 
                 effect_strength_motion = 1
-
                 if age == 7:
-                    effect_strength_clutter = -3  # repulsive
-                if age == 14:
-                    effect_strength_clutter = 0  # neutral
+                    if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
+                        effect_strength_clutter = -3  # repulsive
+                    if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
+                        effect_strength_clutter = -5  # even more repulsive
+                    if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
+                        effect_strength_clutter = -3  # repulsive
+                    if experiment == "scn1lab_zirc_20200710" and genotype == "het":
+                        effect_strength_clutter = -5  # even more repulsive
+                    if experiment == "disc1_hetinx" and genotype == "wt":
+                        effect_strength_clutter = -3  # repulsive
+                    if experiment == "disc1_hetinx" and genotype == "hom":
+                        effect_strength_clutter = -1  # more attractive, but still repulseive
+
                 if age == 21:
-                    effect_strength_clutter = 3  # attractive
-
-                #effect_strength_motion = 0
-                #effect_strength_clutter = 0
-
-                if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
-                    pass
-
-                if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
-                    effect_strength_clutter -= 2 # make it more repulsive
-
-                if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
-                    pass
-
-                if experiment == "scn1lab_zirc_20200710" and genotype == "het":
-                    effect_strength_clutter -= 2 # make it more repulsive
-
-                if experiment == "disc1_hetinx" and genotype == "wt":
-                    pass
-
-                if experiment == "disc1_hetinx" and genotype == "hom":
-                    effect_strength_clutter += 2 # make it more attractive
-
+                    if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
+                        effect_strength_clutter = 3  # attrachtive
+                    if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
+                        effect_strength_clutter = 1  # slightly less attrative
+                    if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
+                        effect_strength_clutter = 3  # repulsive
+                    if experiment == "scn1lab_zirc_20200710" and genotype == "het":
+                        effect_strength_clutter = 1  # slightly less attrative
+                    if experiment == "disc1_hetinx" and genotype == "wt":
+                        effect_strength_clutter = 1  # not so attracted
+                    if experiment == "disc1_hetinx" and genotype == "hom":
+                        effect_strength_clutter = 2  # more attractive
 
                 simulate_particles(tau, sigma, T, p_below, p_above,
                                    effect_strength_motion,
