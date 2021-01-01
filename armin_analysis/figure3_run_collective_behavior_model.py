@@ -201,6 +201,7 @@ root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coher
 root_output_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/model_results_11112020")
 
 for age in [7, 21]:
+    k = 0
     for experiment in ["scn1lab_NIBR_20200708", "scn1lab_zirc_20200710", "disc1_hetinx"]:
 
         if experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
@@ -209,10 +210,17 @@ for age in [7, 21]:
         if experiment == 'disc1_hetinx':
             genotypes = ["wt", "hom"]
 
-        output_path = root_output_path / f"{experiment}_{age}dpf"
+        #output_path = root_output_path / f"{experiment}_{age}dpf"
+        # control experiment
+        output_path = root_output_path / f"wt_control_neither_system_{age}dpf"
+
         output_path.mkdir(exist_ok=True)
 
         for genotype in genotypes:
+
+            # for the control experiments, only use wt data
+            if genotype != 'wt':
+                continue
 
             df_estimated_parameters_model = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @genotype").droplevel(["genotype"])
 
@@ -283,6 +291,10 @@ for age in [7, 21]:
                         effect_strength_clutter = 1  # not so attracted
                     if experiment == "disc1_hetinx" and genotype == "hom":
                         effect_strength_clutter = 2  # more attractive
+
+                # Separe systems control experiemtns:
+                effect_strength_motion = 0
+                effect_strength_clutter = 0
 
                 simulate_particles(tau, sigma, T, p_below, p_above,
                                    effect_strength_motion,
@@ -367,10 +379,16 @@ for age in [7, 21]:
                                                 np.sin(ang)*arena_size/2 + arena_size/2]).T})
                 Header_new = dict({"ratio_pix_cm": [10]})
 
-                output_path2 = output_path / genotype / f"5fish_{j}"
+                #output_path2 = output_path / genotype / f"5fish_{j}"
+
+                # Control experiment
+                output_path2 = output_path / f"5fish_{k}"
+
                 output_path2.mkdir(parents=True, exist_ok=True)
 
                 sio.savemat(output_path2 / "simple_data.mat", simple_data)
                 sio.savemat(output_path2 / "Header_new.mat", Header_new)
 
+                # Control experiment
+                k+=1
 
