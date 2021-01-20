@@ -198,7 +198,10 @@ def simulate_particles(tau,
 
 # Load the consensus parameter sets
 root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
-root_output_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/model_results_11112020")
+#root_output_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/model_results_11112020")
+root_output_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/model_results_01202021")
+
+root_output_path.mkdir(exist_ok=True)
 
 for age in [7, 21]:
     k = 0
@@ -212,7 +215,11 @@ for age in [7, 21]:
 
         #output_path = root_output_path / f"{experiment}_{age}dpf"
         # control experiment
-        output_path = root_output_path / f"wt_control_neither_system_{age}dpf"
+        #output_path = root_output_path / f"wt_control_neither_system_{age}dpf"
+
+        #output_path = root_output_path / f"wt_only_motion_system_{age}dpf"
+        #output_path = root_output_path / f"wt_only_clutter_system_{age}dpf"
+        output_path = root_output_path / f"wt_both_system_{age}dpf"
 
         output_path.mkdir(exist_ok=True)
 
@@ -264,41 +271,78 @@ for age in [7, 21]:
 
 
                 effect_strength_motion = 1
+
+                # Previous, hand-tuned values
+                # if age == 7:
+                #     if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
+                #         effect_strength_clutter = -3  # repulsive
+                #     if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
+                #         effect_strength_clutter = -5  # even more repulsive
+                #     if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
+                #         effect_strength_clutter = -3  # repulsive
+                #     if experiment == "scn1lab_zirc_20200710" and genotype == "het":
+                #         effect_strength_clutter = -5  # even more repulsive
+                #     if experiment == "disc1_hetinx" and genotype == "wt":
+                #         effect_strength_clutter = -3  # repulsive
+                #     if experiment == "disc1_hetinx" and genotype == "hom":
+                #         effect_strength_clutter = -1  # more attractive, but still repulseive
+                #
+                # if age == 21:
+                #     if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
+                #         effect_strength_clutter = 3  # attrachtive
+                #     if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
+                #         effect_strength_clutter = 1  # slightly less attrative
+                #     if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
+                #         effect_strength_clutter = 3  # repulsive
+                #     if experiment == "scn1lab_zirc_20200710" and genotype == "het":
+                #         effect_strength_clutter = 1  # slightly less attrative
+                #     if experiment == "disc1_hetinx" and genotype == "wt":
+                #         effect_strength_clutter = 1  # not so attracted
+                #     if experiment == "disc1_hetinx" and genotype == "hom":
+                #         effect_strength_clutter = 2  # more attractive
+
+                # New, values based on clutter response
+
                 if age == 7:
                     if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
-                        effect_strength_clutter = -3  # repulsive
+                        effect_strength_clutter = -1 # repulse (arbitrary set to one)
                     if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
-                        effect_strength_clutter = -5  # even more repulsive
+                        effect_strength_clutter = -2  # 2 times bigger than scnpp
                     if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
-                        effect_strength_clutter = -3  # repulsive
+                        effect_strength_clutter = -1  # same as wt nibr
                     if experiment == "scn1lab_zirc_20200710" and genotype == "het":
-                        effect_strength_clutter = -5  # even more repulsive
+                        effect_strength_clutter = -1.5  # slightly less repulsive than scn_het nibr
                     if experiment == "disc1_hetinx" and genotype == "wt":
-                        effect_strength_clutter = -3  # repulsive
+                        effect_strength_clutter = -2  # as strong as scn_nibr_het
                     if experiment == "disc1_hetinx" and genotype == "hom":
-                        effect_strength_clutter = -1  # more attractive, but still repulseive
+                        effect_strength_clutter = -1.5  # slightly less repusolve than disc_wt
 
                 if age == 21:
                     if experiment == "scn1lab_NIBR_20200708" and genotype == "wt":
-                        effect_strength_clutter = 3  # attrachtive
+                        effect_strength_clutter = 3  # attrachtive (postive, and much bigger number than scn_nibr_wt, as distributions is shifted to smaller differences
                     if experiment == "scn1lab_NIBR_20200708" and genotype == "het":
-                        effect_strength_clutter = 1  # slightly less attrative
+                        effect_strength_clutter = 3  # same as scn_nibr_wt_21
                     if experiment == "scn1lab_zirc_20200710" and genotype == "wt":
-                        effect_strength_clutter = 3  # repulsive
+                        effect_strength_clutter = 3  # same as scn_nibr_wt_21
                     if experiment == "scn1lab_zirc_20200710" and genotype == "het":
-                        effect_strength_clutter = 1  # slightly less attrative
+                        effect_strength_clutter = 2  # less attrative than scn_zirc_wt (distribution shallower)
                     if experiment == "disc1_hetinx" and genotype == "wt":
                         effect_strength_clutter = 1  # not so attracted
                     if experiment == "disc1_hetinx" and genotype == "hom":
                         effect_strength_clutter = 2  # more attractive
 
                 # Separe systems control experiemtns:
-                effect_strength_motion = 0
-                effect_strength_clutter = 0
+                #effect_strength_motion = 0
+                #effect_strength_clutter = 0
+
+                # Scaling clutter is the only free parameter in our model.
+                # We adjust it to approximate the range of aggregration found in the data across all genotypes
+                scaling_clutter = 0.8
+                scaling_motion = 1
 
                 simulate_particles(tau, sigma, T, p_below, p_above,
-                                   effect_strength_motion,
-                                   effect_strength_clutter,
+                                   effect_strength_motion*scaling_motion,
+                                   effect_strength_clutter*scaling_clutter,
                                    dt,
                                    ts,
                                    integrated_motion_perception_particles,
