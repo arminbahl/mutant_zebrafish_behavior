@@ -12,15 +12,15 @@ fig = myfig.Figure(title=f"Figure 2")
 # mutant_name= 'het'
 # basecolor = "C3"
 
-# experiment = "scn1lab_zirc_20200710"
-# mutant_name= 'het'
-# basecolor = "red"
+experiment = "scn1lab_zirc_20200710"
+mutant_name= 'het'
+basecolor = "red"
 
-experiment = "disc1_hetinx"
-mutant_name= 'hom'
+# experiment = "disc1_hetinx"
+# mutant_name= 'hom'
 basecolor = "C4"
-
-root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
+#/mutant_behavior_data
+root_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/mutant_behavior_data/dot_motion_coherence")
 target_path = Path("/Users/arminbahl/Dropbox/pandas_data_for_ariel/paper/figures")
 
 df_estimated_parameters_wt = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == 'wt'").droplevel(["genotype"])
@@ -51,7 +51,10 @@ for data_model in [0, 1]:
         df_extracted_binned_features_heading_angle_change_histograms_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_heading_angle_change_histograms")
         df_extracted_binned_features_inter_bout_interval_histograms_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_inter_bout_interval_histograms")
 
+        print("wt N = ", len(df_extracted_binned_features_wt.query("genotype == 'wt' and stim == 0 and bin == 7")))
+        print("mutant N = ", len(df_extracted_binned_features_mutant.query("genotype == @mutant_name and stim == 0 and bin == 7")))
 
+    sdf
     if data_model == 1:
         ypos = 14
         df_extracted_features_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_features")
