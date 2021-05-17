@@ -269,8 +269,9 @@ class MyProblem(Problem):
         e2 = mean_squared_log_error(model_df_binned_correctness.loc[1], self.target_df_binned_correctness.loc[1]) + \
              mean_squared_log_error(model_df_binned_correctness.loc[2], self.target_df_binned_correctness.loc[2]) + \
              mean_squared_log_error(model_df_binned_correctness.loc[3], self.target_df_binned_correctness.loc[3])
-        e3 = mean_squared_log_error(model_df_correctness_as_function_of_coherence, self.target_df_correctness_as_function_of_coherence)
+        e3 = mean_squared_log_error(model_df_binned_same_direction, self.target_df_binned_same_direction)
 
+        # Keep squared distance here
         e4 = ((model_df_gmm_fitting_results["w_left"] - self.target_df_gmm_fitting_results["w_left"]) ** 2).sum() + \
              ((model_df_gmm_fitting_results["w_center"] - self.target_df_gmm_fitting_results["w_center"]) ** 2).sum() + \
              ((model_df_gmm_fitting_results["w_right"] - self.target_df_gmm_fitting_results["w_right"]) ** 2).sum()
