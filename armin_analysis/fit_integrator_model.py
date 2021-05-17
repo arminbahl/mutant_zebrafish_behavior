@@ -356,4 +356,4 @@ if __name__ == "__main__":
 
     # Save optimized values
     np.save(root_path / f"review1_leaky_integrator_model2_X_{target_genotype}_{random_seed}.npy", np.array(X_each_gen))
-    np.save(root_path / f"review1leaky_integrator_model2_F_{target_genotype}_{random_seed}.npy", np.array(F_each_gen))
+    np.save(root_path / f"review1_leaky_integrator_model2_F_{target_genotype}_{random_seed}.npy", np.array(F_each_gen))
