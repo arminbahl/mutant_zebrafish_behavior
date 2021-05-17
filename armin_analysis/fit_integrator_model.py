@@ -11,6 +11,7 @@ from pymoo.factory import get_sampling, get_crossover, get_mutation
 from pymoo.factory import get_termination
 from pymoo.optimize import minimize
 import argparse
+from sklearn.metrics import mean_squared_log_error
 
 
 # Initialize the buffers
@@ -246,15 +247,30 @@ class MyProblem(Problem):
         model_df_binned_features_inter_bout_interval_histograms, \
         model_df_gmm_fitting_results = get_model_result(x)
 
-        # Calculate the errors
-        e0 = ((model_df_correctness_as_function_of_coherence - self.target_df_correctness_as_function_of_coherence) ** 2).sum()
-        e1 = ((model_df_inter_bout_interval_as_function_of_coherence - self.target_df_inter_bout_interval_as_function_of_coherence) ** 2).sum()
-        e2 = ((model_df_binned_correctness.loc[1] - self.target_df_binned_correctness.loc[1]) ** 2).sum() + \
-             ((model_df_binned_correctness.loc[2] - self.target_df_binned_correctness.loc[2]) ** 2).sum() + \
-             ((model_df_binned_correctness.loc[3] - self.target_df_binned_correctness.loc[3]) ** 2).sum()
-        e3 = ((model_df_binned_same_direction - self.target_df_binned_same_direction) ** 2).sum()
+        # # Calculate the errors
+        # e0 = ((model_df_correctness_as_function_of_coherence - self.target_df_correctness_as_function_of_coherence) ** 2).sum()
+        # e1 = ((model_df_inter_bout_interval_as_function_of_coherence - self.target_df_inter_bout_interval_as_function_of_coherence) ** 2).sum()
+        # e2 = ((model_df_binned_correctness.loc[1] - self.target_df_binned_correctness.loc[1]) ** 2).sum() + \
+        #      ((model_df_binned_correctness.loc[2] - self.target_df_binned_correctness.loc[2]) ** 2).sum() + \
+        #      ((model_df_binned_correctness.loc[3] - self.target_df_binned_correctness.loc[3]) ** 2).sum()
+        # e3 = ((model_df_binned_same_direction - self.target_df_binned_same_direction) ** 2).sum()
 
         # Compute Error between estimated weights for the histograms
+        #e4 = ((model_df_gmm_fitting_results["w_left"] - self.target_df_gmm_fitting_results["w_left"]) ** 2).sum() + \
+        #     ((model_df_gmm_fitting_results["w_center"] - self.target_df_gmm_fitting_results["w_center"]) ** 2).sum() + \
+        #     ((model_df_gmm_fitting_results["w_right"] - self.target_df_gmm_fitting_results["w_right"]) ** 2).sum()
+
+        # 18. Mai 2021
+        # Reviewer comment: Compute the errors in a different way, using the mean squared log error
+        e0 = mean_squared_log_error(model_df_correctness_as_function_of_coherence,
+                                    self.target_df_correctness_as_function_of_coherence)
+        e1 = mean_squared_log_error(model_df_inter_bout_interval_as_function_of_coherence,
+                                    self.target_df_inter_bout_interval_as_function_of_coherence)
+        e2 = mean_squared_log_error(model_df_binned_correctness.loc[1], self.target_df_binned_correctness.loc[1]) + \
+             mean_squared_log_error(model_df_binned_correctness.loc[2], self.target_df_binned_correctness.loc[2]) + \
+             mean_squared_log_error(model_df_binned_correctness.loc[3], self.target_df_binned_correctness.loc[3])
+        e3 = mean_squared_log_error(model_df_correctness_as_function_of_coherence, self.target_df_correctness_as_function_of_coherence)
+
         e4 = ((model_df_gmm_fitting_results["w_left"] - self.target_df_gmm_fitting_results["w_left"]) ** 2).sum() + \
              ((model_df_gmm_fitting_results["w_center"] - self.target_df_gmm_fitting_results["w_center"]) ** 2).sum() + \
              ((model_df_gmm_fitting_results["w_right"] - self.target_df_gmm_fitting_results["w_right"]) ** 2).sum()
@@ -338,5 +354,5 @@ if __name__ == "__main__":
     print("X_each_gen", np.array(X_each_gen).shape)
 
     # Save optimized values
-    np.save(root_path / f"leaky_integrator_model2_X_{target_genotype}_{random_seed}.npy", np.array(X_each_gen))
-    np.save(root_path / f"leaky_integrator_model2_F_{target_genotype}_{random_seed}.npy", np.array(F_each_gen))
+    np.save(root_path / f"review1_leaky_integrator_model2_X_{target_genotype}_{random_seed}.npy", np.array(X_each_gen))
+    np.save(root_path / f"review1leaky_integrator_model2_F_{target_genotype}_{random_seed}.npy", np.array(F_each_gen))

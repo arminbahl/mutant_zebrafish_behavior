@@ -8,13 +8,13 @@ import pandas as pd
 
 fig = myfig.Figure(title=f"Figure 2")
 
-# experiment = "scn1lab_NIBR_20200708"
-# mutant_name= 'het'
-# basecolor = "C3"
-
-experiment = "scn1lab_zirc_20200710"
+experiment = "scn1lab_NIBR_20200708"
 mutant_name= 'het'
-basecolor = "red"
+basecolor = "C3"
+
+# experiment = "scn1lab_zirc_20200710"
+# mutant_name= 'het'
+# basecolor = "red"
 
 # experiment = "disc1_hetinx"
 # mutant_name= 'hom'
