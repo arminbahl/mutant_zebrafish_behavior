@@ -236,6 +236,13 @@ class MyProblem(Problem):
 
     #def compute_error(self, vals, target):
     #    return np.mean(((vals - target) / target)**2)
+    def MSLE(self, y_true, y_pred):
+        """Same as sklearn.metrics import mean_squared_log_error but should work with nans.
+            Note that it cannot deal with negative values."""
+
+        n = len(y_true)
+        return np.nanmean([(np.log(y_pred[i] + 1) -
+                            np.log(y_true[i] + 1)) ** 2.0 for i in range(n)])
 
     def _evaluate(self, x, out, *args, **kwargs):
 
@@ -262,14 +269,14 @@ class MyProblem(Problem):
 
         # 18. Mai 2021
         # Reviewer comment: Compute the errors in a different way, using the mean squared log error
-        e0 = mean_squared_log_error(model_df_correctness_as_function_of_coherence,
+        e0 = self.MSLE(model_df_correctness_as_function_of_coherence,
                                     self.target_df_correctness_as_function_of_coherence)
-        e1 = mean_squared_log_error(model_df_inter_bout_interval_as_function_of_coherence,
+        e1 = self.MSLE(model_df_inter_bout_interval_as_function_of_coherence,
                                     self.target_df_inter_bout_interval_as_function_of_coherence)
-        e2 = mean_squared_log_error(model_df_binned_correctness.loc[1], self.target_df_binned_correctness.loc[1]) + \
-             mean_squared_log_error(model_df_binned_correctness.loc[2], self.target_df_binned_correctness.loc[2]) + \
-             mean_squared_log_error(model_df_binned_correctness.loc[3], self.target_df_binned_correctness.loc[3])
-        e3 = mean_squared_log_error(model_df_binned_same_direction, self.target_df_binned_same_direction)
+        e2 = self.MSLE(model_df_binned_correctness.loc[1], self.target_df_binned_correctness.loc[1]) + \
+             self.MSLE(model_df_binned_correctness.loc[2], self.target_df_binned_correctness.loc[2]) + \
+             self.MSLE(model_df_binned_correctness.loc[3], self.target_df_binned_correctness.loc[3])
+        e3 = self.MSLE(model_df_binned_same_direction, self.target_df_binned_same_direction)
 
         # Keep squared distance here
         e4 = ((model_df_gmm_fitting_results["w_left"] - self.target_df_gmm_fitting_results["w_left"]) ** 2).sum() + \
