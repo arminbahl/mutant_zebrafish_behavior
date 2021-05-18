@@ -8,9 +8,13 @@ import pandas as pd
 
 fig = myfig.Figure(title=f"Figure 2")
 
-experiment = "scn1lab_NIBR_20200708"
-mutant_name= 'het'
+experiment = "surrogate_fish2"
+mutant_name= 'wt'
 basecolor = "C3"
+
+# experiment = "scn1lab_NIBR_20200708"
+# mutant_name= 'het'
+# basecolor = "C3"
 
 # experiment = "scn1lab_zirc_20200710"
 # mutant_name= 'het'
@@ -21,7 +25,10 @@ basecolor = "C3"
 basecolor = "C4"
 #/mutant_behavior_data
 root_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/mutant_behavior_data/dot_motion_coherence")
-target_path = Path("/Users/arminbahl/Dropbox/pandas_data_for_ariel/paper/figures")
+#target_path = Path("/Users/arminbahl/Dropbox/pandas_data_for_ariel/paper/figures")
+target_path = Path("/Users/arminbahl/Desktop")
+
+
 
 df_estimated_parameters_wt = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == 'wt'").droplevel(["genotype"])
 df_estimated_parameters_mutant = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @mutant_name").droplevel(["genotype"])
@@ -54,7 +61,7 @@ for data_model in [0, 1]:
         print("wt N = ", len(df_extracted_binned_features_wt.query("genotype == 'wt' and stim == 0 and bin == 7")))
         print("mutant N = ", len(df_extracted_binned_features_mutant.query("genotype == @mutant_name and stim == 0 and bin == 7")))
 
-    sdf
+
     if data_model == 1:
         ypos = 14
         df_extracted_features_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_features")

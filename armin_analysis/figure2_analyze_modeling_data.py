@@ -8,15 +8,18 @@ import pandas as pd
 import pylab as pl
 from fit_integrator_model import leaky_integrator_model2
 
-root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
+#root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
+root_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/mutant_behavior_data/dot_motion_coherence")
 
-for experiment in ["disc1_hetinx", "scn1lab_zirc_20200710", "scn1lab_NIBR_20200708"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
+#for experiment in ["disc1_hetinx", "scn1lab_zirc_20200710", "scn1lab_NIBR_20200708"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
+for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
 
     if experiment == "disc1_hetinx":
         genotypes = ["wt", "het", "hom"]
-
-    if experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
+    elif experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
         genotypes = ["wt", "het"]
+    else:
+        genotypes = ["wt"]
 
     estimated_parameters = dict({"repeat": [],
                                  "genotype": [],
@@ -72,7 +75,6 @@ for experiment in ["disc1_hetinx", "scn1lab_zirc_20200710", "scn1lab_NIBR_202007
                             errors_over_generations["error"].append(F[generation, :, error_i].min())
                         else:
                             errors_over_generations["error"].append(F_sum[generation, :].min())
-
 
             # Get the best parameter
             best_i = np.argmin(F_sum[-1, :])
