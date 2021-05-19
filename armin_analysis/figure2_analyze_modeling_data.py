@@ -11,8 +11,10 @@ from fit_integrator_model import leaky_integrator_model2
 #root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/dot_motion_coherence")
 root_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/mutant_behavior_data/dot_motion_coherence")
 
+review_string = "review1_"
+
 #for experiment in ["disc1_hetinx", "scn1lab_zirc_20200710", "scn1lab_NIBR_20200708"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
-for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
+for experiment in ["surrogate_fish1"]:#, "surrogate_fish3"]:
 
     if experiment == "disc1_hetinx":
         genotypes = ["wt", "het", "hom"]
@@ -36,7 +38,7 @@ for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
                                   "generation": [],
                                   "error_i": [],
                                   "error": []})
-    for repeat in range(12):
+    for repeat in [2,3,4,9,10]:#range(12):
 
         all_data_experiment = dict({"fish_ID": [],
                                     "genotype": [],
@@ -52,8 +54,8 @@ for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
 
         for genotype in genotypes:
 
-            X = np.load(root_path / experiment / f"leaky_integrator_model2_X_{genotype}_{repeat}.npy")
-            F = np.load(root_path / experiment / f"leaky_integrator_model2_F_{genotype}_{repeat}.npy")
+            X = np.load(root_path / experiment / f"{review_string}leaky_integrator_model2_X_{genotype}_{repeat}.npy")
+            F = np.load(root_path / experiment / f"{review_string}leaky_integrator_model2_F_{genotype}_{repeat}.npy")
 
             # Create a single error function from the 5 error functions
             # Normalize the features based on their genera unit range
@@ -126,7 +128,7 @@ for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
 
         (root_path / experiment).mkdir(exist_ok=True)
 
-        df.to_hdf(root_path / experiment / f"all_data_best_model_repeat{repeat}.h5", key="all_bouts", complevel=4)
+        df.to_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{repeat}.h5", key="all_bouts", complevel=4)
 
         # Extract more detailed behavioral features
         df_extracted_features, df_extracted_binned_features, \
@@ -135,18 +137,18 @@ for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
         df_extracted_binned_features_inter_bout_interval_histograms, \
         df_gmm_fitting_results = get_fish_info(df)
 
-        df_extracted_features.to_hdf(root_path / experiment / f"all_data_best_model_repeat{repeat}.h5", key="extracted_features", complevel=4)
-        df_extracted_binned_features.to_hdf(root_path / experiment / f"all_data_best_model_repeat{repeat}.h5", key="extracted_binned_features",
+        df_extracted_features.to_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{repeat}.h5", key="extracted_features", complevel=4)
+        df_extracted_binned_features.to_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{repeat}.h5", key="extracted_binned_features",
                                             complevel=4)
-        df_extracted_binned_features_same_direction.to_hdf(root_path / experiment / f"all_data_best_model_repeat{repeat}.h5",
+        df_extracted_binned_features_same_direction.to_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{repeat}.h5",
                                                            key="extracted_binned_features_same_direction", complevel=4)
-        df_extracted_binned_features_heading_angle_change_histograms.to_hdf(root_path / experiment / f"all_data_best_model_repeat{repeat}.h5",
+        df_extracted_binned_features_heading_angle_change_histograms.to_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{repeat}.h5",
                                                                             key="extracted_binned_features_heading_angle_change_histograms",
                                                                             complevel=4)
-        df_extracted_binned_features_inter_bout_interval_histograms.to_hdf(root_path / experiment / f"all_data_best_model_repeat{repeat}.h5",
+        df_extracted_binned_features_inter_bout_interval_histograms.to_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{repeat}.h5",
                                                                            key="extracted_binned_features_inter_bout_interval_histograms",
                                                                            complevel=4)
-        df_gmm_fitting_results.to_hdf(root_path / experiment / f"all_data_best_model_repeat{repeat}.h5", key="gmm_fitting_results", complevel=4)
+        df_gmm_fitting_results.to_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{repeat}.h5", key="gmm_fitting_results", complevel=4)
 
 
     # Save the parameter info file
@@ -154,8 +156,8 @@ for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
     df.set_index(["genotype", 'repeat'], inplace=True)
     df.sort_index(inplace=True)
 
-    df.to_excel(root_path / experiment / "estimated_model_parameters.xlsx", sheet_name="data")
-    df.to_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data")
+    df.to_excel(root_path / experiment / f"{review_string}estimated_model_parameters.xlsx", sheet_name="data")
+    df.to_hdf(root_path / experiment / f"{review_string}estimated_model_parameters.h5", key="data")
 
 
     """
@@ -244,7 +246,7 @@ for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
     df.set_index(["genotype", 'repeat', "error_i", "generation"], inplace=True)
     df.sort_index(inplace=True)
 
-    df.to_excel(root_path / experiment / "errors_over_generations.xlsx", sheet_name="data")
-    df.to_hdf(root_path / experiment / "errors_over_generations.h5", key="data")
+    df.to_excel(root_path / experiment / f"{review_string}errors_over_generations.xlsx", sheet_name="data")
+    df.to_hdf(root_path / experiment / f"{review_string}errors_over_generations.h5", key="data")
 
 

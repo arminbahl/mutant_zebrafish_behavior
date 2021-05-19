@@ -8,9 +8,10 @@ import pandas as pd
 
 fig = myfig.Figure(title=f"Figure 2")
 
-experiment = "surrogate_fish2"
+experiment = "surrogate_fish1"
 mutant_name= 'wt'
 basecolor = "C3"
+review_string = "review1_"
 
 # experiment = "scn1lab_NIBR_20200708"
 # mutant_name= 'het'
@@ -22,7 +23,7 @@ basecolor = "C3"
 
 # experiment = "disc1_hetinx"
 # mutant_name= 'hom'
-basecolor = "C4"
+#basecolor = "C4"
 #/mutant_behavior_data
 root_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/mutant_behavior_data/dot_motion_coherence")
 #target_path = Path("/Users/arminbahl/Dropbox/pandas_data_for_ariel/paper/figures")
@@ -30,33 +31,33 @@ target_path = Path("/Users/arminbahl/Desktop")
 
 
 
-df_estimated_parameters_wt = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == 'wt'").droplevel(["genotype"])
-df_estimated_parameters_mutant = pd.read_hdf(root_path / experiment / "estimated_model_parameters.h5", key="data").query("genotype == @mutant_name").droplevel(["genotype"])
+df_estimated_parameters_wt = pd.read_hdf(root_path / experiment / f"{review_string}estimated_model_parameters.h5", key="data").query("genotype == 'wt'").droplevel(["genotype"])
+df_estimated_parameters_mutant = pd.read_hdf(root_path / experiment / f"{review_string}estimated_model_parameters.h5", key="data").query("genotype == @mutant_name").droplevel(["genotype"])
 
-df_minimal_error_gen0_wt = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == 'wt' and generation == 0").droplevel(["genotype", "generation"])
-df_minimal_error_gen0_mutant = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == @mutant_name and generation == 0").droplevel(["genotype", "generation"])
+df_minimal_error_gen0_wt = pd.read_hdf(root_path / experiment / f"{review_string}errors_over_generations.h5", key="data").query("genotype == 'wt' and generation == 0").droplevel(["genotype", "generation"])
+df_minimal_error_gen0_mutant = pd.read_hdf(root_path / experiment / f"{review_string}errors_over_generations.h5", key="data").query("genotype == @mutant_name and generation == 0").droplevel(["genotype", "generation"])
 
-df_minimal_error_gen79_wt = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == 'wt' and generation == 79").droplevel(["genotype", "generation"])
-df_minimal_error_gen79_mutant = pd.read_hdf(root_path / experiment / "errors_over_generations.h5", key="data").query("genotype == @mutant_name and generation == 79").droplevel(["genotype", "generation"])
+df_minimal_error_gen79_wt = pd.read_hdf(root_path / experiment / f"{review_string}errors_over_generations.h5", key="data").query("genotype == 'wt' and generation == 79").droplevel(["genotype", "generation"])
+df_minimal_error_gen79_mutant = pd.read_hdf(root_path / experiment / f"{review_string}errors_over_generations.h5", key="data").query("genotype == @mutant_name and generation == 79").droplevel(["genotype", "generation"])
 
-best_repeat_model_wt = df_minimal_error_gen79_wt.query("error_i == 5")["error"].argmin()
-best_repeat_model_mutant = df_minimal_error_gen79_mutant.query("error_i == 5")["error"].argmin()
+best_repeat_model_wt = df_minimal_error_gen79_wt.query("error_i == 5")["error"].argmin() + 2
+best_repeat_model_mutant = df_minimal_error_gen79_mutant.query("error_i == 5")["error"].argmin() + 2
 
 for data_model in [0, 1]:
 
     if data_model == 0:
         ypos = 22
-        df_extracted_features_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_features")
-        df_extracted_binned_features_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features")
-        df_extracted_binned_features_same_direction_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_same_direction")
-        df_extracted_binned_features_heading_angle_change_histograms_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_heading_angle_change_histograms")
-        df_extracted_binned_features_inter_bout_interval_histograms_wt = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_inter_bout_interval_histograms")
+        df_extracted_features_wt = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_features")
+        df_extracted_binned_features_wt = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_binned_features")
+        df_extracted_binned_features_same_direction_wt = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_binned_features_same_direction")
+        df_extracted_binned_features_heading_angle_change_histograms_wt = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_binned_features_heading_angle_change_histograms")
+        df_extracted_binned_features_inter_bout_interval_histograms_wt = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_binned_features_inter_bout_interval_histograms")
 
-        df_extracted_features_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_features")
-        df_extracted_binned_features_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features")
-        df_extracted_binned_features_same_direction_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_same_direction")
-        df_extracted_binned_features_heading_angle_change_histograms_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_heading_angle_change_histograms")
-        df_extracted_binned_features_inter_bout_interval_histograms_mutant = pd.read_hdf(root_path / experiment / "all_data.h5", key="extracted_binned_features_inter_bout_interval_histograms")
+        df_extracted_features_mutant = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_features")
+        df_extracted_binned_features_mutant = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_binned_features")
+        df_extracted_binned_features_same_direction_mutant = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_binned_features_same_direction")
+        df_extracted_binned_features_heading_angle_change_histograms_mutant = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_binned_features_heading_angle_change_histograms")
+        df_extracted_binned_features_inter_bout_interval_histograms_mutant = pd.read_hdf(root_path / experiment / f"all_data.h5", key="extracted_binned_features_inter_bout_interval_histograms")
 
         print("wt N = ", len(df_extracted_binned_features_wt.query("genotype == 'wt' and stim == 0 and bin == 7")))
         print("mutant N = ", len(df_extracted_binned_features_mutant.query("genotype == @mutant_name and stim == 0 and bin == 7")))
@@ -64,17 +65,17 @@ for data_model in [0, 1]:
 
     if data_model == 1:
         ypos = 14
-        df_extracted_features_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_features")
-        df_extracted_binned_features_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features")
-        df_extracted_binned_features_same_direction_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_same_direction")
-        df_extracted_binned_features_heading_angle_change_histograms_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_heading_angle_change_histograms")
-        df_extracted_binned_features_inter_bout_interval_histograms_wt = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_inter_bout_interval_histograms")
+        df_extracted_features_wt = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_features")
+        df_extracted_binned_features_wt = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features")
+        df_extracted_binned_features_same_direction_wt = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_same_direction")
+        df_extracted_binned_features_heading_angle_change_histograms_wt = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_heading_angle_change_histograms")
+        df_extracted_binned_features_inter_bout_interval_histograms_wt = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_wt}.h5", key="extracted_binned_features_inter_bout_interval_histograms")
 
-        df_extracted_features_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_features")
-        df_extracted_binned_features_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features")
-        df_extracted_binned_features_same_direction_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_same_direction")
-        df_extracted_binned_features_heading_angle_change_histograms_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_heading_angle_change_histograms")
-        df_extracted_binned_features_inter_bout_interval_histograms_mutant = pd.read_hdf(root_path / experiment / f"all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_inter_bout_interval_histograms")
+        df_extracted_features_mutant = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_features")
+        df_extracted_binned_features_mutant = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features")
+        df_extracted_binned_features_same_direction_mutant = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_same_direction")
+        df_extracted_binned_features_heading_angle_change_histograms_mutant = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_heading_angle_change_histograms")
+        df_extracted_binned_features_inter_bout_interval_histograms_mutant = pd.read_hdf(root_path / experiment / f"{review_string}all_data_best_model_repeat{best_repeat_model_mutant}.h5", key="extracted_binned_features_inter_bout_interval_histograms")
 
 
     correctness_as_function_of_coherence_wt_mean = df_extracted_features_wt.query("genotype == 'wt'").groupby("stim").mean()["correctness"]
@@ -236,7 +237,7 @@ p0 = myfig.Plot(fig, num='b', xpos=2.0, ypos=7, plot_height=0.75, plot_width=1.5
                                yl="Minimal error\nin population", ymin=-0.01, ymax=0.51, yticks=[0, 0.25, 0.5], hlines=[0])
 
 # Only show the consensus error
-for i in range(12):
+for i in [0,1,2]:#range(12):
     myfig.Scatter(p0, x=[0], y=df_minimal_error_gen0_wt.query("error_i == 5").values[i], pt='o', lw=0.5, ps=9.8, pc='white', lc='black', zorder=2, alpha=0.5)
     myfig.Scatter(p0, x=[1], y=df_minimal_error_gen79_wt.query("error_i == 5").values[i], pt='o', lw=0.5, ps=9.8, pc='white', lc='black', zorder=2, alpha=0.5)
     myfig.Line(p0, x=[0, 1], y=[df_minimal_error_gen0_wt.query("error_i == 5").values[i],
@@ -253,12 +254,12 @@ p0 = myfig.Plot(fig, num='', xpos=5.0, ypos=7, plot_height=0.75, plot_width=1.25
             xl="Estimated value", xmin=-0.1, xmax=4.1, xticks=[0, 2, 4],
             yl="", ymin=-0.6, ymax=1.6, yticks=[0, 1], yticklabels=["Wildtype", "Mutant"])
 
-myfig.Scatter(p0, x=df_estimated_parameters_wt['tau'].values, y=[0]*12, lc='black', pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_wt['tau'].values, y=[0]*3, lc='black', pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_wt['tau'].median()], y=[0], lc='black', pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
 
-myfig.Scatter(p0, x=df_estimated_parameters_mutant['tau'].values, y=[1]*12, lc=basecolor, pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_mutant['tau'].values, y=[1]*3, lc=basecolor, pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_mutant['tau'].median()], y=[1], lc=basecolor, pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
@@ -273,12 +274,12 @@ p0 = myfig.Plot(fig, num='', xpos=7, ypos=7, plot_height=0.75, plot_width=1.25, 
             xl="Estimated value", xmin=-0.1, xmax=30.1, xticks=[0, 15, 30],
             yl="", ymin=-0.6, ymax=1.6, yticks=[0, 1], yticklabels=["", ""])
 
-myfig.Scatter(p0, x=df_estimated_parameters_wt['noise_sigma'].values, y=[0]*12, lc='black', pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_wt['noise_sigma'].values, y=[0]*3, lc='black', pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_wt['noise_sigma'].median()], y=[0], lc='black', pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
 
-myfig.Scatter(p0, x=df_estimated_parameters_mutant['noise_sigma'].values, y=[1]*12, lc=basecolor, pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_mutant['noise_sigma'].values, y=[1]*3, lc=basecolor, pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_mutant['noise_sigma'].median()], y=[1], lc=basecolor, pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
@@ -294,12 +295,12 @@ p0 = myfig.Plot(fig, num='', xpos=9, ypos=7, plot_height=0.75, plot_width=1.25, 
             xl="Estimated value", xmin=-0.1, xmax=2.1, xticks=[0, 1, 2],
             yl="", ymin=-0.6, ymax=1.6, yticks=[0, 1], yticklabels=["", ""])
 
-myfig.Scatter(p0, x=df_estimated_parameters_wt['T'].values, y=[0]*12, lc='black', pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_wt['T'].values, y=[0]*3, lc='black', pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_wt['T'].median()], y=[0], lc='black', pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
 
-myfig.Scatter(p0, x=df_estimated_parameters_mutant['T'].values, y=[1]*12, lc=basecolor, pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_mutant['T'].values, y=[1]*3, lc=basecolor, pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_mutant['T'].median()], y=[1], lc=basecolor, pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
@@ -315,12 +316,12 @@ p0 = myfig.Plot(fig, num='', xpos=11.0, ypos=7, plot_height=0.75, plot_width=1.2
             xl="Estimated value",  xmin=-0.44, xmax=2.1, xticks=[0, 1, 2],
             yl="", ymin=-0.6, ymax=1.6, yticks=[0, 1], yticklabels=["", ""])
 
-myfig.Scatter(p0, x=df_estimated_parameters_wt['bout_clock_probability_below_threshold'].values*100, y=[0]*12, lc='black', pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_wt['bout_clock_probability_below_threshold'].values*100, y=[0]*3, lc='black', pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_wt['bout_clock_probability_below_threshold'].median()*100], y=[0], lc='black', pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
 
-myfig.Scatter(p0, x=df_estimated_parameters_mutant['bout_clock_probability_below_threshold'].values*100, y=[1]*12, lc=basecolor, pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_mutant['bout_clock_probability_below_threshold'].values*100, y=[1]*3, lc=basecolor, pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_mutant['bout_clock_probability_below_threshold'].median()*100], y=[1], lc=basecolor, pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
@@ -336,12 +337,12 @@ p0 = myfig.Plot(fig, num='', xpos=13.0, ypos=7, plot_height=0.75, plot_width=1.2
             xl="Estimated value",  xmin=-0.44, xmax=6.1, xticks=[0, 2, 4, 6],
             yl="", ymin=-0.6, ymax=1.6, yticks=[0, 1], yticklabels=["", ""])
 
-myfig.Scatter(p0, x=df_estimated_parameters_wt['bout_clock_probability_above_threshold'].values*100, y=[0]*12, lc='black', pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_wt['bout_clock_probability_above_threshold'].values*100, y=[0]*3, lc='black', pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_wt['bout_clock_probability_above_threshold'].median()*100], y=[0], lc='black', pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
 
-myfig.Scatter(p0, x=df_estimated_parameters_mutant['bout_clock_probability_above_threshold'].values*100, y=[1]*12, lc=basecolor, pt='o',
+myfig.Scatter(p0, x=df_estimated_parameters_mutant['bout_clock_probability_above_threshold'].values*100, y=[1]*3, lc=basecolor, pt='o',
                       lw=0.5, ps=5, pc='white', zorder=2, alpha=0.5)
 myfig.Scatter(p0, x=[df_estimated_parameters_mutant['bout_clock_probability_above_threshold'].median()*100], y=[1], lc=basecolor, pt='o',
                       lw=1, ps=10, pc='white', zorder=2)
@@ -351,4 +352,4 @@ p, stars = bootstrap(df_estimated_parameters_wt['bout_clock_probability_above_th
 myfig.Line(p0, x=[3, 3], y=[0,1], lc='black', lw=0.75)
 myfig.Text(p0, x=3.5, y=0.5, text=stars)
 
-fig.savepdf(target_path / f"raw_figure2_{experiment}", open_pdf=True)
+fig.savepdf(target_path / f"{review_string}raw_figure2_{experiment}", open_pdf=True)

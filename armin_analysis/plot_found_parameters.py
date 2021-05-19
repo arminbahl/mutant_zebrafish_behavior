@@ -10,7 +10,9 @@ from scipy.stats import ttest_ind
 
 #root_path = Path("/Users/arminbahl/Desktop/preprocessed data/4 fish setups free swimming behavior/dot_motion_coherence8_2")
 #root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/scn1lab_sa16474")
-root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/surrogate_fish1")
+#root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/surrogate_fish1")
+#root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/surrogate_fish1")
+root_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/mutant_behavior_data/dot_motion_coherence/surrogate_fish1")
 #root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/scn1lab_NIBR")
 #root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/immp2l_NIBR")
 #root_path = Path("/Users/arminbahl/Desktop/mutant_behavior_data/immp2l_summer")
