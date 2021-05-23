@@ -14,14 +14,14 @@ root_path = Path("/Users/arminbahl/Dropbox/mutant_manuscript/mutant_behavior_dat
 review_string = "review1_"
 
 #for experiment in ["disc1_hetinx", "scn1lab_zirc_20200710", "scn1lab_NIBR_20200708"]:#["scn1lab_sa16474"]:#["surrogate_fish1", "surrogate_fish2", "surrogate_fish3"]:
-for experiment in ["surrogate_fish1"]:#, "surrogate_fish3"]:
+for experiment in ["surrogate_fish1", "surrogate_fish2"]:#, "surrogate_fish3"]:
 
     if experiment == "disc1_hetinx":
         genotypes = ["wt", "het", "hom"]
     elif experiment == "scn1lab_NIBR_20200708" or experiment == "scn1lab_zirc_20200710":
         genotypes = ["wt", "het"]
     else:
-        genotypes = ["wt"]
+        genotypes = ["wt", "het", "hom"]
 
     estimated_parameters = dict({"repeat": [],
                                  "genotype": [],
@@ -38,7 +38,7 @@ for experiment in ["surrogate_fish1"]:#, "surrogate_fish3"]:
                                   "generation": [],
                                   "error_i": [],
                                   "error": []})
-    for repeat in [2,3,4,9,10]:#range(12):
+    for repeat in range(12):
 
         all_data_experiment = dict({"fish_ID": [],
                                     "genotype": [],
