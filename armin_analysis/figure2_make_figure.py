@@ -12,10 +12,10 @@ fig = myfig.Figure(title=f"Figure 2")
 # mutant_name= 'wt'
 # basecolor = "C3"
 # review_string = "review1_"
-
-experiment = "scn1lab_NIBR_20200708"
-mutant_name= 'het'
-basecolor = "C3"
+#
+# experiment = "scn1lab_NIBR_20200708"
+# mutant_name= 'het'
+# basecolor = "C3"
 
 #
 # experiment = "scn1lab_zirc_20200710"
@@ -84,16 +84,16 @@ for data_model in [0, 1]:
     correctness_as_function_of_coherence_wt_mean = df_extracted_features_wt.query("genotype == 'wt'").groupby("stim").mean()["correctness"]
     correctness_as_function_of_coherence_wt_sem = df_extracted_features_wt.query("genotype == 'wt'").groupby("stim").sem()["correctness"]
 
-    sums_for_roy = pd.ExcelWriter(f'/Users/arminbahl/Desktop/sums_for_roy_{experiment}.xlsx')
+    raw_data_for_roy = pd.ExcelWriter(f'/Users/arminbahl/Desktop/raw_data_for_roy_{experiment}.xlsx')
 
-    df_extracted_features_wt.query("genotype == 'wt'")["correctness"].groupby(["fish_ID", "genotype"]).sum().to_excel(sums_for_roy, sheet_name="correctness over coherence (wt)")
-    df_extracted_features_mutant.query("genotype == @mutant_name")["correctness"].groupby(["fish_ID", "genotype"]).sum().to_excel(sums_for_roy, sheet_name="correctness over coherence (mutant)")
+    df_extracted_features_wt.query("genotype == 'wt'")["correctness"].to_excel(raw_data_for_roy, sheet_name="correctness over coh (wt)")
+    df_extracted_features_mutant.query("genotype == @mutant_name")["correctness"].to_excel(raw_data_for_roy, sheet_name="correctness over coh (mut)")
 
     interbout_interval_as_function_of_coherence_wt_mean = (df_extracted_features_wt.query("genotype == 'wt'")["inter_bout_interval"]).groupby("stim").mean()
     interbout_interval_as_function_of_coherence_wt_sem = (df_extracted_features_wt.query("genotype == 'wt'")["inter_bout_interval"]).groupby("stim").sem()
 
-    df_extracted_features_wt.query("genotype == 'wt'")["inter_bout_interval"].groupby(["fish_ID", "genotype"]).sum().to_excel(sums_for_roy, sheet_name="bout interval over coherence (wt)")
-    df_extracted_features_mutant.query("genotype == @mutant_name")["inter_bout_interval"].groupby(["fish_ID", "genotype"]).sum().to_excel(sums_for_roy, sheet_name="bout interval over coherence (mutant)")
+    df_extracted_features_wt.query("genotype == 'wt'")["inter_bout_interval"].to_excel(raw_data_for_roy, sheet_name="bout int over coh (wt)")
+    df_extracted_features_mutant.query("genotype == @mutant_name")["inter_bout_interval"].to_excel(raw_data_for_roy, sheet_name="bout int over coh (mut)")
 
     binned_correctness_wt_mean = df_extracted_binned_features_wt.query("genotype == 'wt'").groupby(["stim", "bin"]).mean()
     binned_correctness_wt_sem = df_extracted_binned_features_wt.query("genotype == 'wt'").groupby(["stim", "bin"]).sem()
@@ -101,16 +101,16 @@ for data_model in [0, 1]:
     binned_same_direction_wt_mean = df_extracted_binned_features_same_direction_wt.query("genotype == 'wt'").groupby(["bin"]).mean()
     binned_same_direction_wt_sem = df_extracted_binned_features_same_direction_wt.query("genotype == 'wt'").groupby(["bin"]).sem()
 
-    df_extracted_binned_features_same_direction_wt.query("genotype == 'wt'").groupby(["fish_ID", "genotype"]).sum().to_excel(sums_for_roy, sheet_name="Pturn same direction  (wt)")
-    df_extracted_binned_features_same_direction_mutant.query("genotype == @mutant_name").groupby(["fish_ID", "genotype"]).sum().to_excel(sums_for_roy, sheet_name="Pturn same direction (mutant)")
+    df_extracted_binned_features_same_direction_wt.query("genotype == 'wt'").to_excel(raw_data_for_roy, sheet_name="Pturn same direction (wt)")
+    df_extracted_binned_features_same_direction_mutant.query("genotype == @mutant_name").to_excel(raw_data_for_roy, sheet_name="Pturn same direction (mut)")
 
     histogram_heading_angle_change_wt_mean = df_extracted_binned_features_heading_angle_change_histograms_wt.query("genotype == 'wt'").groupby(["stim", "bin"]).mean()
     histogram_heading_angle_change_wt_sem = df_extracted_binned_features_heading_angle_change_histograms_wt.query("genotype == 'wt'").groupby(["stim", "bin"]).sem()
 
-    df_extracted_binned_features_heading_angle_change_histograms_wt.query("genotype == 'wt' and bin > 20").groupby(["fish_ID", "genotype", "stim"]).sum().to_excel(sums_for_roy, sheet_name="turn histograms (wt)")
-    df_extracted_binned_features_heading_angle_change_histograms_mutant.query("genotype == @mutant_name and bin > 20").groupby(["fish_ID", "genotype", "stim"]).sum().to_excel(sums_for_roy, sheet_name="turn histograms (mutant)")
+    df_extracted_binned_features_heading_angle_change_histograms_wt.query("genotype == 'wt' and bin > 10").to_excel(raw_data_for_roy, sheet_name="turn histograms (wt)")
+    df_extracted_binned_features_heading_angle_change_histograms_mutant.query("genotype == @mutant_name and bin > 10").to_excel(raw_data_for_roy, sheet_name="turn histograms (mut)")
 
-    sums_for_roy.save()
+    raw_data_for_roy.save()
     sdfsf
 
 
